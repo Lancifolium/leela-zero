@@ -219,16 +219,13 @@ bool GameState::set_fixed_handicap(int handicap) {
         play_move(FastBoard::BLACK, board.get_vertex(high, high));
     }
 
-    if (handicap >= 3) {
-        play_move(FastBoard::BLACK, board.get_vertex(high, low));
+    if (handicap >= 3 && handicap % 2 == 1) {
+        play_move(FastBoard::BLACK, board.get_vertex(mid, mid));
     }
 
     if (handicap >= 4) {
+        play_move(FastBoard::BLACK, board.get_vertex(high, low));
         play_move(FastBoard::BLACK, board.get_vertex(low, high));
-    }
-
-    if (handicap >= 5 && handicap % 2 == 1) {
-        play_move(FastBoard::BLACK, board.get_vertex(mid, mid));
     }
 
     if (handicap >= 6) {
