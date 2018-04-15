@@ -319,10 +319,8 @@ void GameState::place_free_handicap(int stones) {
         play_move(FastBoard::BLACK, move);
     }
 
-    if (orgstones)  {
+    if (orgstones)  { // white first
         board.set_to_move(FastBoard::WHITE);
-    } else {
-        board.set_to_move(FastBoard::BLACK);
     }
 
     anchor_game_history();

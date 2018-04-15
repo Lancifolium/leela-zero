@@ -101,7 +101,7 @@ void FastBoard::reset_board(int size) {
     m_boardsize = size;
     m_squaresize = size + 2;
     m_maxsq = m_squaresize * m_squaresize;
-    m_tomove = BLACK;
+    m_tomove = WHITE; // white first
     m_prisoners[BLACK] = 0;
     m_prisoners[WHITE] = 0;
     m_empty_cnt = 0;
