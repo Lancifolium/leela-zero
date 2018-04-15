@@ -422,7 +422,9 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor) {
 
     // check handicap here (anchor point)
     int handicap = 0;
+    int handicap_aw = 0;
     std::string handicapstr;
+    std::string handicapstr_aw;
 
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -433,12 +435,20 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor) {
                 handicap++;
                 handicapstr.append("[" + state->board.move_to_text_sgf(vertex) + "]");
             }
+            else if (square == FastBoard::WHITE) {
+                handicap_aw++;
+                handicapstr_aw.append("[" + state->board.move_to_text_sgf(vertex) + "]");
+            }
         }
     }
 
     if (handicap > 0) {
         header.append("HA[" + std::to_string(handicap) + "]");
         moves.append("AB" + handicapstr);
+    }
+
+    if (handicap_aw > 0) {
+        header.append("AW" + handicapstr_aw);
     }
 
     moves.append("\n");

@@ -119,7 +119,7 @@ protected:
     std::array<unsigned short, MAXSQ>      m_empty_idx;   /* indexes of square */
     int m_empty_cnt;                                      /* count of empties */
 
-    int m_tomove;
+    int m_tomove = WHITE;
     int m_maxsq;
 
     int m_boardsize;
