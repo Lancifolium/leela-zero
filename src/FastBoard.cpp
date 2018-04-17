@@ -241,61 +241,15 @@ void FastBoard::remove_neighbour(const int vtx, const int color) {
 
 int FastBoard::calc_reach_color(int color) const {
     auto reachable = 0;
-    auto bd = std::vector<bool>(m_maxsq, false);
-    auto open = std::queue<int>();
-    std::array<int, MAXSQ> m_block;
     for (auto i = 0; i < m_boardsize; i++) {
         for (auto j = 0; j < m_boardsize; j++) {
             auto vertex = get_vertex(i, j);
-            m_block[vertex] = 0;
             if (m_square[vertex] == color) {
                 reachable++;
-                bd[vertex] = true;
-                open.push(vertex);
             }
         }
     }
-    while (!open.empty()) {
-        /* colored field, spread */
-        auto vertex = open.front();
-        open.pop();
-
-        for (auto k = 0; k < 4; k++) {
-            auto neighbor = vertex + m_dirs[k];
-            if (!bd[neighbor] && m_square[neighbor] == EMPTY) {
-                reachable++;
-                bd[neighbor] = true;
-                open.push(neighbor);
-            }
-        }
-    }
-    int n_blocks = 0;
-    for (auto i = 0; i < m_boardsize; i++) {
-        for (auto j = 0; j < m_boardsize; j++) {
-            auto vertex = get_vertex(i, j);
-
-            for (auto k = 0; k < 4; k++) {
-                auto neighbor = vertex + m_dirs[k];
-                if (bd[neighbor] && m_block[neighbor] == 0) {
-                    n_blocks++; // block number ++
-                    m_block[neighbor] = n_blocks; // record as block 'n_blocks'
-                    open.push(neighbor);
-                    while (!open.empty()) {
-                        auto v = open.front();
-                        open.pop();
-                        for (auto l = 0; l < 4; l++) {
-                            auto n = v + m_dirs[l];
-                            if (bd[n] && m_block[n] == 0) {
-                                m_block[n] = n_blocks;
-                                open.push(n);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return reachable - n_blocks * 2;
+    return reachable;
 }
 
 // Needed for scoring passed out games not in MC playouts
