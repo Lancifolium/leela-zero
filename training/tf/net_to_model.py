@@ -34,3 +34,4 @@ if tfprocess.RESIDUAL_FILTERS != channels:
 tfprocess.replace_weights(weights)
 path = os.path.join(os.getcwd(), "leelaz-model")
 save_path = tfprocess.saver.save(tfprocess.session, path, global_step=0)
+tfprocess.save_leelaz_weights(save_path + '.txt')
