@@ -101,7 +101,7 @@ void FastBoard::reset_board(int size) {
     m_boardsize = size;
     m_squaresize = size + 2;
     m_maxsq = m_squaresize * m_squaresize;
-    m_tomove = BLACK;
+    m_tomove = WHITE;
     m_prisoners[BLACK] = 0;
     m_prisoners[WHITE] = 0;
     m_empty_cnt = 0;
@@ -241,29 +241,10 @@ void FastBoard::remove_neighbour(const int vtx, const int color) {
 
 int FastBoard::calc_reach_color(int color) const {
     auto reachable = 0;
-    auto bd = std::vector<bool>(m_maxsq, false);
-    auto open = std::queue<int>();
     for (auto i = 0; i < m_boardsize; i++) {
         for (auto j = 0; j < m_boardsize; j++) {
-            auto vertex = get_vertex(i, j);
-            if (m_square[vertex] == color) {
+            if (m_square[get_vertex(i, j)] == color) {
                 reachable++;
-                bd[vertex] = true;
-                open.push(vertex);
-            }
-        }
-    }
-    while (!open.empty()) {
-        /* colored field, spread */
-        auto vertex = open.front();
-        open.pop();
-
-        for (auto k = 0; k < 4; k++) {
-            auto neighbor = vertex + m_dirs[k];
-            if (!bd[neighbor] && m_square[neighbor] == EMPTY) {
-                reachable++;
-                bd[neighbor] = true;
-                open.push(neighbor);
             }
         }
     }
