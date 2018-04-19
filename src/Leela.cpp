@@ -311,10 +311,10 @@ void init_global_objects() {
 
 void benchmark(GameState& game) {
     game.set_timecontrol(0, 1, 0, 0);  // Set infinite time.
-    game.play_textmove("b", "q16");
+    game.play_textmove("w", "q16");
     auto search = std::make_unique<UCTSearch>(game);
-    game.set_to_move(FastBoard::WHITE);
-    search->think(FastBoard::WHITE);
+    game.set_to_move(FastBoard::BLACK);
+    search->think(FastBoard::BLACK);
 }
 
 int main (int argc, char *argv[]) {
@@ -344,7 +344,7 @@ int main (int argc, char *argv[]) {
     auto maingame = std::make_unique<GameState>();
 
     /* set board limits */
-    auto komi = 7.5f;
+    auto komi = 0.0f;
     maingame->init_game(BOARD_SIZE, komi);
 
     if (cfg_benchmark) {

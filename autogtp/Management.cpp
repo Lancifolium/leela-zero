@@ -88,14 +88,11 @@ Order Management::getWork(const QFileInfo &file) {
 }
 
 void Management::giveAssignments() {
-    sendAllGames();
-
     //Make the OpenCl tuning before starting the threads
     QTextStream(stdout) << "Starting tuning process, please wait..." << endl;
 
-    Order tuneOrder = getWork(true);
     QString tuneCmdLine("./leelaz --tune-only -w networks/");
-    tuneCmdLine.append(tuneOrder.parameters()["network"]);
+    tuneCmdLine.append("fd61b40587c5a1ca86c1c7ae16c6fd91102b44d3ea0fa31b4d368f62d6f8234a");
     if (m_gpusList.isEmpty()) {
         runTuningProcess(tuneCmdLine);
     } else {
@@ -123,12 +120,15 @@ void Management::giveAssignments() {
                     this,
                     &Management::getResult,
                     Qt::DirectConnection);
-            QFileInfo finfo = getNextStored();
-            if(!finfo.fileName().isEmpty()) {
-                m_gamesThreads[thread_index]->order(getWork(finfo));
-            } else {
-                m_gamesThreads[thread_index]->order(getWork());
-            }            
+            QMap<QString,QString> t;
+            t["leelazVer"] = "0.13";
+            t["rndSeed"] = "";
+            t["optHash"] = "ee21";
+            t["options"] = "-v 3300 -r 5 -t 1 --noponder";
+            t["debug"] = "false";
+            t["network"] = "f32316820bae3a52227d1c6b8e04ca13c250209c0d782ba3d29bc7d68b71ed2f";
+            Order o(Order::Production, t);
+            m_gamesThreads[thread_index]->order(o);
             m_gamesThreads[thread_index]->start();
         }
     }
@@ -157,18 +157,19 @@ void Management::getResult(Order ord, Result res, int index, int duration) {
     m_gamesPlayed++;
     switch(res.type()) {
     case Result::File:
-        m_selfGames++,
-        uploadData(res.parameters(), ord.parameters());
+        m_selfGames++;
+        archiveFiles(res.parameters()["file"]);
+        cleanupFiles(res.parameters()["file"]);
         printTimingInfo(duration);
         break;
     case Result::Win:
     case Result::Loss:
-        m_matchGames++,
-        uploadResult(res.parameters(), ord.parameters());
+        m_matchGames++;
+        archiveFiles(res.parameters()["file"]);
+        cleanupFiles(res.parameters()["file"]);
         printTimingInfo(duration);
         break;
     }
-    sendAllGames();
     if(m_gamesLeft == 0) {
         m_gamesThreads[index]->doFinish();
         if(m_threadsLeft > 1) {
@@ -255,7 +256,7 @@ QString Management::getOptionsString(const QJsonObject &opt, const QString &rnd)
     options.append(getOption(opt, "resignation_percent", " -r ", "1"));
     options.append(getOption(opt, "randomcnt", " -m ", "30"));
     options.append(getOption(opt, "threads", " -t ", "1"));
-    options.append(getBoolOption(opt, "dumbpass", " -d ", true));
+    //options.append(getBoolOption(opt, "dumbpass", " -d ", true));
     options.append(getBoolOption(opt, "noise", " -n ", true));
     options.append(" --noponder ");
     if (rnd != "") {
