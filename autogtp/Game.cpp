@@ -28,7 +28,7 @@ Game::Game(const QString& weights, const QString& opt, const QString& binary) :
     m_binary(binary),
     m_timeSettings("time_settings 0 1 0"),
     m_resignation(false),
-    m_blackToMove(true),
+    m_blackToMove(false),
     m_blackResigned(false),
     m_passes(0),
     m_moveNum(0)

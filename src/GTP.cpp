@@ -593,7 +593,7 @@ bool GTP::execute(GameState & game, std::string xinput) {
             cmdstream >> vertex;
 
             if (!cmdstream.fail()) {
-                if (!game.play_textmove("black", vertex)) {
+                if (!game.play_textmove("white", vertex)) {
                     gtp_fail_printf(id, "illegal move");
                 } else {
                     game.set_handicap(game.get_handicap() + 1);

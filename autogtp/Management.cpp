@@ -30,6 +30,8 @@
 #include "Management.h"
 #include "Game.h"
 
+#define NODE_JS_SERVER_IP "192.168.1.100:8080"
+
 
 constexpr int RETRY_DELAY_MIN_SEC = 30;
 constexpr int RETRY_DELAY_MAX_SEC = 60 * 60;  // 1 hour
@@ -311,7 +313,7 @@ Order Management::getWorkInternal(bool tuning) {
     prog_cmdline.append(".exe");
 #endif
     prog_cmdline.append(" -s -J");
-    prog_cmdline.append(" http://zero.sjeng.org/get-task/");
+    prog_cmdline.append(" http://" NODE_JS_SERVER_IP "/get-task/");
     if (tuning) {
         prog_cmdline.append("0");
     } else {
@@ -500,6 +502,7 @@ bool Management::networkExists(const QString &name) {
 
 void Management::fetchNetwork(const QString &net) {
     QString name = "networks/" + net;
+    QTextStream(stdout) << "fetchNetwork, name: " << name << endl;
     if (networkExists(name)) {
         return;
     }
@@ -518,7 +521,8 @@ void Management::fetchNetwork(const QString &net) {
     // Use the filename from the server.
     prog_cmdline.append(" -s -J -o " + name + ".gz ");
     prog_cmdline.append(" -w %{filename_effective}");
-    prog_cmdline.append(" http://zero.sjeng.org/" + name + ".gz");
+    prog_cmdline.append(" http://" NODE_JS_SERVER_IP "/" + name + ".gz");
+    QTextStream(stdout) << "fetchNetwork, prog_cmdline: " << prog_cmdline << endl;
 
     QProcess curl;
     curl.start(prog_cmdline);
@@ -697,7 +701,7 @@ bool Management::sendCurl(const QStringList &lines) {
 -F options_hash=c2e3
 -F random_seed=0
 -F sgf=@file
-http://zero.sjeng.org/submit-match
+http://NODE_JS_SERVER_IP/submit-match
 */
 
 void Management::uploadResult(const QMap<QString,QString> &r, const QMap<QString,QString> &l) {
@@ -720,7 +724,7 @@ void Management::uploadResult(const QMap<QString,QString> &r, const QMap<QString
     prog_cmdline.append("-F options_hash="+ l["optHash"]);
     prog_cmdline.append("-F random_seed="+ l["rndSeed"]);
     prog_cmdline.append("-F sgf=@"+ r["file"] + ".sgf.gz");
-    prog_cmdline.append("http://zero.sjeng.org/submit-match");
+    prog_cmdline.append("http://" NODE_JS_SERVER_IP "/submit-match");
 
     bool sent = false;
     for (auto retries = 0; retries < MAX_RETRIES; retries++) {
@@ -756,7 +760,7 @@ void Management::uploadResult(const QMap<QString,QString> &r, const QMap<QString
 -F random_seed=1
 -F sgf=@file
 -F trainingdata=@data_file
-http://zero.sjeng.org/submit
+http://NODE_JS_SERVER_IP/submit
 */
 
 void Management::uploadData(const QMap<QString,QString> &r, const QMap<QString,QString> &l) {
@@ -772,7 +776,7 @@ void Management::uploadData(const QMap<QString,QString> &r, const QMap<QString,Q
     prog_cmdline.append("-F random_seed="+ l["rndSeed"]);
     prog_cmdline.append("-F sgf=@" + r["file"] + ".sgf.gz");
     prog_cmdline.append("-F trainingdata=@" + r["file"] + ".txt.0.gz");
-    prog_cmdline.append("http://zero.sjeng.org/submit");
+    prog_cmdline.append("http://" NODE_JS_SERVER_IP "/submit");
 
     bool sent = false;
     for (auto retries = 0; retries < MAX_RETRIES; retries++) {
