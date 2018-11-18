@@ -103,7 +103,7 @@ void FastBoard::reset_board(int size) {
     m_boardsize = size;
     m_sidevertices = size + 2;
     m_numvertices = m_sidevertices * m_sidevertices;
-    m_tomove = BLACK;
+    m_tomove = WHITE;
     m_prisoners[BLACK] = 0;
     m_prisoners[WHITE] = 0;
     m_empty_cnt = 0;
@@ -245,29 +245,10 @@ void FastBoard::remove_neighbour(const int vtx, const int color) {
 
 int FastBoard::calc_reach_color(int color) const {
     auto reachable = 0;
-    auto bd = std::vector<bool>(m_numvertices, false);
-    auto open = std::queue<int>();
     for (auto i = 0; i < m_boardsize; i++) {
         for (auto j = 0; j < m_boardsize; j++) {
-            auto vertex = get_vertex(i, j);
-            if (m_state[vertex] == color) {
+            if (m_state[get_vertex(i, j)] == color) {
                 reachable++;
-                bd[vertex] = true;
-                open.push(vertex);
-            }
-        }
-    }
-    while (!open.empty()) {
-        /* colored field, spread */
-        auto vertex = open.front();
-        open.pop();
-
-        for (auto k = 0; k < 4; k++) {
-            auto neighbor = vertex + m_dirs[k];
-            if (!bd[neighbor] && m_state[neighbor] == EMPTY) {
-                reachable++;
-                bd[neighbor] = true;
-                open.push(neighbor);
             }
         }
     }
@@ -278,7 +259,7 @@ int FastBoard::calc_reach_color(int color) const {
 float FastBoard::area_score(float komi) const {
     auto white = calc_reach_color(WHITE);
     auto black = calc_reach_color(BLACK);
-    return black - white - komi;
+    return black - white + komi;
 }
 
 void FastBoard::display_board(int lastmove) {

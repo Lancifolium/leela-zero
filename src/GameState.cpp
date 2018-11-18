@@ -38,6 +38,8 @@ void GameState::init_game(int size, float komi) {
     game_history.clear();
     game_history.emplace_back(std::make_shared<KoState>(*this));
 
+    set_fixed_handicap(0);
+
     m_timecontrol.reset_clocks();
 
     m_resigned = FastBoard::EMPTY;
@@ -48,6 +50,8 @@ void GameState::reset_game() {
 
     game_history.clear();
     game_history.emplace_back(std::make_shared<KoState>(*this));
+
+    set_fixed_handicap(0);
 
     m_timecontrol.reset_clocks();
 
@@ -168,7 +172,7 @@ void GameState::anchor_game_history() {
 }
 
 bool GameState::set_fixed_handicap(int handicap) {
-    if (!valid_handicap(handicap)) {
+    if (!valid_handicap(handicap) && handicap != 0) {
         return false;
     }
 
@@ -177,21 +181,29 @@ bool GameState::set_fixed_handicap(int handicap) {
     int mid = board_size / 2;
 
     int low = board_size - 1 - high;
+
+    if (handicap == 0) { // place stones for ancient chinese rule (座子)
+        play_move(FastBoard::BLACK, board.get_vertex(low, low));
+        play_move(FastBoard::WHITE, board.get_vertex(low, high));
+        play_move(FastBoard::BLACK, board.get_vertex(high, high));
+        play_move(FastBoard::WHITE, board.get_vertex(high, low));
+    } else {
+        while (m_movenum > 0)
+            undo_move();
+    }
+
     if (handicap >= 2) {
         play_move(FastBoard::BLACK, board.get_vertex(low, low));
         play_move(FastBoard::BLACK, board.get_vertex(high, high));
     }
 
-    if (handicap >= 3) {
-        play_move(FastBoard::BLACK, board.get_vertex(high, low));
+    if (handicap >= 3 && handicap % 2 == 1) {
+        play_move(FastBoard::BLACK, board.get_vertex(mid, mid));
     }
 
     if (handicap >= 4) {
+        play_move(FastBoard::BLACK, board.get_vertex(high, low));
         play_move(FastBoard::BLACK, board.get_vertex(low, high));
-    }
-
-    if (handicap >= 5 && handicap % 2 == 1) {
-        play_move(FastBoard::BLACK, board.get_vertex(mid, mid));
     }
 
     if (handicap >= 6) {

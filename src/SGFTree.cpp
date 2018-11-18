@@ -1,4 +1,4 @@
-/*
+﻿/*
     This file is part of Leela Zero.
     Copyright (C) 2017-2018 Gian-Carlo Pascutto and contributors
 
@@ -438,7 +438,9 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor) {
 
     // check handicap here (anchor point)
     auto handicap = 0;
+    auto handicap_aw = 0;
     std::string handicapstr;
+    std::string handicapstr_aw;
 
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
@@ -448,13 +450,19 @@ std::string SGFTree::state_to_string(GameState& pstate, int compcolor) {
             if (vtx_state == FastBoard::BLACK) {
                 handicap++;
                 handicapstr.append("[" + state->board.move_to_text_sgf(vertex) + "]");
+            } else if (vtx_state == FastBoard::WHITE) {
+                handicap_aw++;
+                handicapstr_aw.append("[" + state->board.move_to_text_sgf(vertex) + "]");
             }
         }
     }
 
-    if (handicap > 0) {
-        header.append("HA[" + std::to_string(handicap) + "]");
-        moves.append("AB" + handicapstr);
+    if (handicap > 0 || handicap_aw > 0) {
+        header.append("HA[" + std::to_string(std::abs(handicap - handicap_aw)) + "]");
+        if (handicap > 0)
+            moves.append("AB" + handicapstr);
+        if (handicap_aw > 0)
+            moves.append("AW" + handicapstr_aw);
     }
 
     moves.append("\n");
