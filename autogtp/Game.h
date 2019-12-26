@@ -55,7 +55,11 @@ public:
 
 class Game : QProcess {
 public:
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    Game(const Engine& engine, const QString& trainpath = QString("./data/"),
+#else
     Game(const Engine& engine);
+#endif
     ~Game() = default;
     bool gameStart(const VersionTuple& min_version,
                    const QString &sgf = QString(),

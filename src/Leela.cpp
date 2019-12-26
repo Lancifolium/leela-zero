@@ -510,10 +510,17 @@ void init_global_objects() {
 
 void benchmark(GameState& game) {
     game.set_timecontrol(0, 1, 0, 0);  // Set infinite time.
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    game.play_textmove("w", "d16");
+    game.play_textmove("b", "d4");
+    game.play_textmove("w", "q4");
+    game.play_textmove("b", "q16");
+#else
     game.play_textmove("b", "r16");
     game.play_textmove("w", "d4");
     game.play_textmove("b", "c3");
 
+#endif
     auto search = std::make_unique<UCTSearch>(game, *GTP::s_network);
     game.set_to_move(FastBoard::WHITE);
     search->think(FastBoard::WHITE);

@@ -37,7 +37,11 @@ constexpr int RETRY_DELAY_MIN_SEC = 30;
 constexpr int RETRY_DELAY_MAX_SEC = 60 * 60;  // 1 hour
 constexpr int MAX_RETRIES = 3;           // Stop retrying after 3 times
 
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+const QString server_url = "http://192.168.1.100:8080/";
+#else
 const QString server_url = "https://zero.sjeng.org/";
+#endif
 const QString Leelaz_min_version = "0.12";
 
 Management::Management(const int gpus,
@@ -47,6 +51,10 @@ Management::Management(const int gpus,
                        const int maxGames,
                        const bool delNetworks,
                        const QString& keep,
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+                       const QString& exlzopts,
+                       const QString& exgtpopts,
+#endif
                        const QString& debug)
 
     : m_syncMutex(),
@@ -65,7 +73,12 @@ Management::Management(const int gpus,
     m_gamesLeft(maxGames),
     m_threadsLeft(gpus * games),
     m_delNetworks(delNetworks),
-    m_lockFile(nullptr) {
+    m_lockFile(nullptr),
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    m_exlzopts(exlzopts),
+    m_exgtpopts(exgtpopts)
+#endif
+{
 }
 
 void Management::runTuningProcess(const QString &tuneCmdLine) {
@@ -105,9 +118,14 @@ void Management::giveAssignments() {
     //Make the OpenCl tuning before starting the threads
     QTextStream(stdout) << "Starting tuning process, please wait..." << endl;
 
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    QString tuneCmdLine("./leelaz --tune-only -w ./networks/weights.txt");
+    tuneCmdLine.append(m_exlzopts);
+#else
     Order tuneOrder = getWork(true);
     QString tuneCmdLine("./leelaz --batchsize=5 --tune-only -w networks/");
     tuneCmdLine.append(tuneOrder.parameters()["network"] + ".gz");
+#endif
     if (m_gpusList.isEmpty()) {
         runTuningProcess(tuneCmdLine);
     } else {
@@ -139,7 +157,25 @@ void Management::giveAssignments() {
             if (!finfo.fileName().isEmpty()) {
                 m_gamesThreads[thread_index]->order(getWork(finfo));
             } else {
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+                QMap<QString, QString> t;
+                QString options;
+                if (!m_exgtpopts.isEmpty())
+                    options.append(" " + m_exgtpopts + " ");
+                else
+                    options.append(" -v 1500 -r 1 -t 1");
+                QTextStream(stdout) << "options: " << options << "\n";
+                t["leelazVer"] = "1.15";
+                t["rndSeed"] = "";
+                t["optHash"] = "ee21";
+                t["options"] = options;
+                t["debug"] = "false";
+                t["network"] = "weights.txt";
+                Order o(Order::Production, t);
+                m_gamesThreads[thread_index]->order(o);
+#else
                 m_gamesThreads[thread_index]->order(getWork());
+#endif
             }
             m_gamesThreads[thread_index]->start();
         }
@@ -169,18 +205,33 @@ void Management::getResult(Order ord, Result res, int index, int duration) {
     m_gamesPlayed++;
     switch (res.type()) {
     case Result::File:
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+        m_selfGames++;
+        archiveFiles(res.parameters()["file"]);
+        cleanupFiles(res.parameters()["file"]);
+#else
         m_selfGames++,
         uploadData(res.parameters(), ord.parameters());
+#endif
         printTimingInfo(duration);
         break;
     case Result::Win:
     case Result::Loss:
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+        m_matchGames++;
+        archiveFiles(res.parameters()["file"]);
+        cleanupFiles(res.parameters()["file"]);
+#else
         m_matchGames++,
         uploadResult(res.parameters(), ord.parameters());
+
+#endif
         printTimingInfo(duration);
         break;
     }
+#if !defined(ANCIENT_CHINESE_RULE_ENABLED)
     sendAllGames();
+#endif
     if (m_gamesLeft == 0) {
         m_gamesThreads[index]->doFinish();
         if (m_threadsLeft > 1) {
@@ -194,7 +245,25 @@ void Management::getResult(Order ord, Result res, int index, int duration) {
         if (!finfo.fileName().isEmpty()) {
             m_gamesThreads[index]->order(getWork(finfo));
         } else {
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+            QMap<QString, QString> t;
+            QString options;
+            if (!m_exgtpopts.isEmpty())
+                options.append(" " + m_exgtpopts + " ");
+            else
+                options.append(" -v 1500 -r 1 -t 1");
+            QTextStream(stdout) << "options: " << options << "\n";
+            t["leelazVer"] = "1.15";
+            t["rndSeed"] = "";
+            t["optHash"] = "ee21";
+            t["options"] = options;
+            t["debug"] = "false";
+            t["network"] = "weights.txt";
+            Order o(Order::Production, t);
+            m_gamesThreads[index]->order(o);
+#else
             m_gamesThreads[index]->order(getWork());
+#endif
         }
     }
     m_syncMutex.unlock();

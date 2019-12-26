@@ -53,9 +53,18 @@ static constexpr auto NUM_INTERSECTIONS = BOARD_SIZE * BOARD_SIZE;
 static constexpr auto POTENTIAL_MOVES = NUM_INTERSECTIONS + 1; // including pass
 
 /*
+ * Enable ancient Chinese Rule.
+ */
+#define ANCIENT_CHINESE_RULE_ENABLED
+
+/*
  * KOMI: Define the default komi to use when training.
  */
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+static constexpr auto KOMI = 0.5f;
+#else
 static constexpr auto KOMI = 7.5f;
+#endif
 
 /*
  * Features

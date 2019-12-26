@@ -114,7 +114,12 @@ void FastBoard::reset_board(int size) {
     m_boardsize = size;
     m_sidevertices = size + 2;
     m_numvertices = m_sidevertices * m_sidevertices;
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    m_tomove = WHITE;
+#else
     m_tomove = BLACK;
+#endif
+
     m_prisoners[BLACK] = 0;
     m_prisoners[WHITE] = 0;
     m_empty_cnt = 0;
@@ -254,6 +259,12 @@ void FastBoard::remove_neighbour(const int vtx, const int color) {
     }
 }
 
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+inline bool in_color_region(int color, int target) {
+    return (target == color) || (target == FastBoard::vertex_t::EMPTY);
+}
+#endif
+
 int FastBoard::calc_reach_color(int color) const {
     auto reachable = 0;
     auto bd = std::vector<bool>(m_numvertices, false);
@@ -261,13 +272,38 @@ int FastBoard::calc_reach_color(int color) const {
     for (auto i = 0; i < m_boardsize; i++) {
         for (auto j = 0; j < m_boardsize; j++) {
             auto vertex = get_vertex(i, j);
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+            if (m_state[vertex] == color && !bd[vertex]) {
+                open.push(vertex);
+                bd[vertex] = true;
+                reachable++;
+                while (!open.empty()) {
+                    /* colored field, spread */
+                    auto vertex = open.front();
+                    open.pop();
+
+                    for (auto k = 0; k < 4; k++) {
+                        auto neighbor = vertex + m_dirs[k];
+                        if (!bd[neighbor] &&
+                            in_color_region(color, m_state[neighbor])) {
+                            bd[neighbor] = true;
+                            reachable++;
+                            open.push(neighbor);
+                        }
+                    }
+                }
+                reachable -= 2;
+            }
+#else
             if (m_state[vertex] == color) {
                 reachable++;
                 bd[vertex] = true;
                 open.push(vertex);
             }
+#endif
         }
     }
+#if !defined(ANCIENT_CHINESE_RULE_ENABLED)
     while (!open.empty()) {
         /* colored field, spread */
         auto vertex = open.front();
@@ -282,6 +318,7 @@ int FastBoard::calc_reach_color(int color) const {
             }
         }
     }
+#endif
     return reachable;
 }
 
@@ -289,7 +326,11 @@ int FastBoard::calc_reach_color(int color) const {
 float FastBoard::area_score(float komi) const {
     auto white = calc_reach_color(WHITE);
     auto black = calc_reach_color(BLACK);
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    return black - white + komi;
+#else
     return black - white - komi;
+#endif
 }
 
 void FastBoard::display_board(int lastmove) {

@@ -42,6 +42,10 @@ public:
                const int maxGame,
                const bool delNetworks,
                const QString& keep,
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+               const QString& exlzopts,
+               const QString& exgtpopts,
+#endif
                const QString& debug);
     ~Management() = default;
     void giveAssignments();
@@ -83,6 +87,10 @@ private:
     bool m_delNetworks;
     QLockFile *m_lockFile;
     QString m_leelaversion;
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    QString m_exlzopts;
+    QString m_exgtpopts;
+#endif
 
     Order getWorkInternal(bool tuning);
     Order getWork(bool tuning = false);

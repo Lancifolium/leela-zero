@@ -23,12 +23,21 @@
 #include <QFileInfo>
 #include "Game.h"
 
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+Game::Game(const Engine& engine, const QString& trainpath) :
+#else
 Game::Game(const Engine& engine) :
+#endif
     QProcess(),
     m_engine(engine),
     m_isHandicap(false),
     m_resignation(false),
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    m_trandatapath(trainpath),
+    m_blackToMove(false),
+#else
     m_blackToMove(true),
+#endif
     m_blackResigned(false),
     m_passes(0),
     m_moveNum(0)
@@ -218,6 +227,24 @@ bool Game::gameStart(const VersionTuple &min_version,
             exit(EXIT_FAILURE);
         }
     }
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    QDir dir(m_traindatapath);
+    QStringList trainfilter;
+    trainfilter << "*.0.gz" << "*.train";
+    QStringList trainfiles = dir.entryList(trainfilter, QDir::Files | QDir::Readable, QDir::Name);
+    for (int tmpi = 0; tmpi < trainfiles.size(); tmpi++) {
+        sendGtpCommand(qPrintable("load_training " + m_traindatapath + trainfiles[tmpi]));
+    }
+    QDir dir1("./training_sgfs/");
+    QStringList trainfilter1;
+    trainfilter1 << "*.sgf";
+    QStringList trainsgfs = dir1.entryList(trainfilter1,  QDir::Files | QDir::Readable, QDir::Name);
+    for (int tmpi = 0; tmpi < trainsgfs.size(); tmpi++) {
+        sendGtpCommand(qPrintable("loadsgf ./training_sgfs/" + trainsgfs[tmpi]));
+    }
+    QTextStream(stdout) << "load " << trainfiles.size() << " training files and "
+                        << trainsgfs.size() << " training sgfs. \n";
+#endif
     QTextStream(stdout) << "Starting GTP commands sent." << endl;
     return true;
 }

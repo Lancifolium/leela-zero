@@ -78,6 +78,16 @@ int main(int argc, char *argv[]) {
         { "e", "erase" }, "Erase old networks when new ones are available.",
                           "");
 
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    QCommandLineOption exlzOption(
+        { "x", "exlzparams" }, "Extra leelaz running parameters.",
+                           "extra leelaz parameters");
+
+    QCommandLineOption exgtpOption(
+        { "o", "exgtpparams" }, "Extra gtp running parameters.",
+                            "extra gtp parameters");
+#endif
+
     parser.addOption(gamesNumOption);
     parser.addOption(gpusOption);
     parser.addOption(keepSgfOption);
@@ -86,6 +96,10 @@ int main(int argc, char *argv[]) {
     parser.addOption(singleOption);
     parser.addOption(maxOption);
     parser.addOption(eraseOption);
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    parser.addOption(exlzOption);
+    parser.addOption(exgtpOption);
+#endif
 
     // Process the actual command line arguments given by the user
     parser.process(app);
@@ -142,6 +156,9 @@ int main(int argc, char *argv[]) {
     }
     Management *boss = new Management(gpusNum, gamesNum, gpusList, AUTOGTP_VERSION, maxNum,
                                       parser.isSet(eraseOption), parser.value(keepSgfOption),
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+                                      parser.value(exlzOption), parser.value(exgtpOption),
+#endif
                                       parser.value(keepDebugOption));
     QObject::connect(&app, &QCoreApplication::aboutToQuit, boss, &Management::storeGames);
     QTimer *timer = new QTimer();
