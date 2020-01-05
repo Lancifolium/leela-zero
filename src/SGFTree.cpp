@@ -239,6 +239,10 @@ void SGFTree::populate_states() {
     }
 
     // handicap stones
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    int prop_ab_count = 0;
+    int prop_aw_count = 0;
+#endif
     auto prop_pair_ab = m_properties.equal_range("AB");
     // Do we have a handicap specified but no handicap stones placed in
     // the same node? Then the SGF file is corrupt. Let's see if we can find
@@ -254,15 +258,42 @@ void SGFTree::populate_states() {
         const auto move = pit->second;
         const auto vtx = string_to_vertex(move);
         apply_move(FastBoard::BLACK, vtx);
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+        ++prop_ab_count;
+#endif
     }
 
     // XXX: count handicap stones
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    auto prop_pair_aw = m_properties.equal_range("AW");
+    if (has_handicap && prop_pair_aw.first == prop_pair_aw.second) {
+        if (!m_children.empty()) {
+            auto& successor = m_children[0];
+            prop_pair_aw = successor.m_properties.equal_range("AW");
+        }
+    }
+#else
     const auto& prop_pair_aw = m_properties.equal_range("AW");
+#endif
     for (auto pit = prop_pair_aw.first; pit != prop_pair_aw.second; ++pit) {
         const auto move = pit->second;
         const auto vtx = string_to_vertex(move);
         apply_move(FastBoard::WHITE, vtx);
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+        ++prop_aw_count;
+#endif
     }
+
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
+    // Maybe it is more suitable for the colour with less handicaps to move
+    // firstly.
+    if (prop_ab_count > 0 || prop_aw_count > 0) {
+        if (prop_ab_count < prop_aw_count)
+            m_state.set_to_move(FastBoard::BLACK);
+        else
+            m_state.set_to_move(FastBoard::WHITE);
+    }
+#endif
 
     it = m_properties.find("PL");
     if (it != end(m_properties)) {
