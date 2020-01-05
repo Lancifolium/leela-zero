@@ -28,6 +28,9 @@ public:
         Error = 0,
         Production,
         Validation,
+#if defined(LEELA_GTP)
+        GTPDumpSupervised,
+#endif
         Wait,
         RestoreMatch,
         RestoreSelfPlayed

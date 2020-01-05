@@ -71,6 +71,11 @@ void Worker::createJob(int type) {
     case Order::RestoreMatch:
         m_job = new ValidationJob(m_gpu, m_boss);
         break;
+#if defined(LEELA_GTP)
+    case Order::GTPDumpSupervised:
+        m_job = new DumpSupervisedJob(m_gpu, m_boss);
+        break;
+#endif
     case Order::Wait:
         m_job = new WaitJob(m_gpu, m_boss);
         break;
@@ -87,6 +92,10 @@ void Worker::run() {
         std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
         if (m_state != STORING) {
             emit resultReady(m_todo, res, m_index, gameDuration);
+#if defined(LEELA_GTP)
+            if (res.type() == Result::Error)
+                break;
+#endif
         }
     } while (m_state == RUNNING);
     if (m_state == STORING) {

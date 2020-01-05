@@ -40,6 +40,9 @@ public:
     void order(Order o);
     void doFinish() { m_job->finish(); m_state.store(FINISHING); }
     void doStore();
+#if defined(LEELA_GTP)
+    Job *getJob() { return m_job; }
+#endif
     void run() override;
 signals:
     void resultReady(Order o, Result r, int index, int duration);

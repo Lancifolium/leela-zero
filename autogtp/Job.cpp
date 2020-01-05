@@ -28,6 +28,9 @@
 Job::Job(QString gpu, Management *parent) :
     m_state(RUNNING),
     m_gpu(gpu),
+#if defined(LEELA_GTP)
+    m_should_sendmsg(false),
+#endif
     m_boss(parent)
 {
 }
@@ -68,7 +71,12 @@ WaitJob::WaitJob(QString gpu, Management *parent) :
 Result ProductionJob::execute(){
     Result res(Result::Error);
     Game game(m_engine);
+#if defined(LEELA_GTP)
+    if (!game.gameStart(m_leelazMinVersion, m_boss, m_sgf, m_moves)) {
+#else
     if (!game.gameStart(m_leelazMinVersion, m_sgf, m_moves)) {
+#endif
+        QTextStream(stdout) << "before return res in projub\n";
         return res;
     }
     if (!m_sgf.isEmpty()) {
@@ -78,12 +86,25 @@ Result ProductionJob::execute(){
             QFile::remove(m_sgf + ".train");
         }
     }
+#if defined(LEELA_GTP)
+    if (m_should_sendmsg) {
+        emit sendmessage(100000); // init
+    }
+#endif
     do {
         game.move();
         if (!game.waitForMove()) {
             return res;
         }
+#if defined(LEELA_GTP)
+        if (m_should_sendmsg) {
+            emit sendmessage(game.readMove());
+        } else {
+            game.readMove();
+        }
+#else
         game.readMove();
+#endif
         m_boss->incMoves();
     } while (game.nextMove() && m_state.load() == RUNNING);
     switch (m_state.load()) {
@@ -118,7 +139,14 @@ Result ProductionJob::execute(){
 
 void ProductionJob::init(const Order &o) {
     Job::init(o);
+#if defined(LEELA_GTP)
+    if (o.parameters()["use_local_network"] == "true")
+        m_engine.m_network = m_boss->gtp_config()->net_filepath;
+    else
+        m_engine.m_network = "networks/" + o.parameters()["network"] + ".gz";
+#else
     m_engine.m_network = "networks/" + o.parameters()["network"] + ".gz";
+#endif
     m_engine.m_options = " " + o.parameters()["options"] + m_gpu + " -g -q -w ";
     if (o.parameters().contains("gtpCommands")) {
         m_engine.m_commands = o.parameters()["gtpCommands"].split(",");
@@ -132,11 +160,19 @@ void ProductionJob::init(const Order &o) {
 Result ValidationJob::execute(){
     Result res(Result::Error);
     Game first(m_engineFirst);
+#if defined(LEELA_GTP)
+    if (!first.gameStart(m_leelazMinVersion, m_boss, m_sgf, m_moves)) {
+#else
     if (!first.gameStart(m_leelazMinVersion, m_sgf, m_moves)) {
+#endif
         return res;
     }
     Game second(m_engineSecond);
+#if defined(LEELA_GTP)
+    if (!second.gameStart(m_leelazMinVersion, m_boss, m_sgf, m_moves)) {
+#else
     if (!second.gameStart(m_leelazMinVersion, m_sgf, m_moves)) {
+#endif
         return res;
     }
     if (!m_sgf.isEmpty()) {
@@ -156,6 +192,11 @@ Result ValidationJob::execute(){
         std::swap(gameToMove, gameOpponent);
         std::swap(colorToMove, colorOpponent);
     }
+#if defined(LEELA_GTP)
+    if (m_should_sendmsg) {
+        emit sendmessage(100000); // init
+    }
+#endif
     do {
         std::swap(gameToMove, gameOpponent);
         std::swap(colorToMove, colorOpponent);
@@ -163,7 +204,15 @@ Result ValidationJob::execute(){
         if (!gameToMove->waitForMove()) {
             return res;
         }
+#if defined(LEELA_GTP)
+        if (m_should_sendmsg) {
+            emit sendmessage(gameToMove->readMove());
+        } else {
+            gameToMove->readMove();
+        }
+#else
         gameToMove->readMove();
+#endif
         m_boss->incMoves();
         gameOpponent->setMove("play " + *colorToMove + " " + gameToMove->getMove());
     } while (gameToMove->nextMove() && m_state.load() == RUNNING);
@@ -199,12 +248,26 @@ Result ValidationJob::execute(){
 
 void ValidationJob::init(const Order &o) {
     Job::init(o);
+#if defined(LEELA_GTP)
+    if (o.parameters()["use_local_network"] == "true")
+        m_engineFirst.m_network = m_boss->gtp_config()->net_filepath;
+    else
+        m_engineFirst.m_network = "networks/" + o.parameters()["firstNet"] + ".gz";
+#else
     m_engineFirst.m_network = "networks/" + o.parameters()["firstNet"] + ".gz";
+#endif
     m_engineFirst.m_options = " " + o.parameters()["options"] + m_gpu + " -g -q -w ";
     if (o.parameters().contains("gtpCommands")) {
         m_engineFirst.m_commands = o.parameters()["gtpCommands"].split(",");
     }
+#if defined(LEELA_GTP)
+    if (o.parameters()["use_local_network"] == "true")
+        m_engineFirst.m_network = m_boss->gtp_config()->net_component_filepath;
+    else
+        m_engineSecond.m_network = "networks/" + o.parameters()["secondNet"] + ".gz";
+#else
     m_engineSecond.m_network = "networks/" + o.parameters()["secondNet"] + ".gz";
+#endif
     m_engineSecond.m_options = " " + o.parameters()["optionsSecond"] + m_gpu + " -g -q -w ";
     if (o.parameters().contains("gtpCommandsSecond")) {
         m_engineSecond.m_commands = o.parameters()["gtpCommandsSecond"].split(",");
@@ -223,3 +286,38 @@ void WaitJob::init(const Order &o) {
     Job::init(o);
     m_minutes = o.parameters()["minutes"].toInt();
 }
+
+#if defined(LEELA_GTP)
+DumpSupervisedJob::DumpSupervisedJob(QString gpu, Management *parent) :
+    Job(gpu, parent),
+    m_engine(Engine(QString(), QString())) {}
+
+Result DumpSupervisedJob::execute() {
+    Result res(Result::Error);
+    Game game(m_engine);
+    if (!game.gameStart(m_leelazMinVersion, m_boss, QString(), m_moves)) {
+        QTextStream(stdout) << "before return res in projub\n";
+        return res;
+    }
+
+    game.dumpSupervised(m_boss->gtp_config()->dump_sgf_file, m_boss->gtp_config()->dump_data_file);
+
+    res.type(Result::Done);
+    game.gameQuit();
+    return res;
+}
+
+void DumpSupervisedJob::init(const Order &o) {
+    Job::init(o);
+    if (o.parameters()["use_local_network"] == "true")
+        m_engine.m_network = m_boss->gtp_config()->net_filepath;
+    else
+        m_engine.m_network = "networks/" + o.parameters()["network"] + ".gz";
+
+    m_engine.m_options = " " + o.parameters()["options"] + m_gpu + " -g -q -w ";
+    if (o.parameters().contains("gtpCommands")) {
+        m_engine.m_commands = o.parameters()["gtpCommands"].split(",");
+    }
+    //m_moves = o.parameters()["moves"].toInt();
+}
+#endif

@@ -21,19 +21,18 @@
 #include <QTextStream>
 #include <QRegularExpression>
 #include <QFileInfo>
+#if defined(LEELA_GTP)
+#include <QDir>
+#include "Management.h"
+#endif
 #include "Game.h"
 
-#if defined(ANCIENT_CHINESE_RULE_ENABLED)
-Game::Game(const Engine& engine, const QString& trainpath) :
-#else
 Game::Game(const Engine& engine) :
-#endif
     QProcess(),
     m_engine(engine),
     m_isHandicap(false),
     m_resignation(false),
-#if defined(ANCIENT_CHINESE_RULE_ENABLED)
-    m_trandatapath(trainpath),
+#if defined(LEELA_GTP)
     m_blackToMove(false),
 #else
     m_blackToMove(true),
@@ -118,7 +117,11 @@ void Game::checkVersion(const VersionTuple &min_version) {
     waitForBytesWritten(-1);
     if (!waitReady()) {
         error(Game::LAUNCH_FAILURE);
+#if defined(LEELA_GTP)
+        return;
+#else
         exit(EXIT_FAILURE);
+#endif
     }
     char readBuffer[256];
     int readCount = readLine(readBuffer, 256);
@@ -129,7 +132,11 @@ void Game::checkVersion(const VersionTuple &min_version) {
         QTextStream(stdout) << readBuffer << endl;
         if (!waitReady()) {
             error(Game::PROCESS_DIED);
+#if defined(LEELA_GTP)
+            return;
+#else
             exit(EXIT_FAILURE);
+#endif
         }
         readCount = readLine(readBuffer, 256);
     }
@@ -137,7 +144,11 @@ void Game::checkVersion(const VersionTuple &min_version) {
     if (readCount <= 3 || readBuffer[0] != '=') {
         QTextStream(stdout) << "GTP: " << readBuffer << endl;
         error(Game::WRONG_GTP);
+#if defined(LEELA_GTP)
+        return;
+#else
         exit(EXIT_FAILURE);
+#endif
     }
     QString version_buff(&readBuffer[2]);
     version_buff = version_buff.simplified();
@@ -145,7 +156,11 @@ void Game::checkVersion(const VersionTuple &min_version) {
     if (version_list.size() < 2) {
         QTextStream(stdout)
             << "Unexpected Leela Zero version: " << version_buff << endl;
+#if defined(LEELA_GTP)
+        return;
+#else
         exit(EXIT_FAILURE);
+#endif
     }
     if (version_list.size() < 3) {
         version_list.append("0");
@@ -162,15 +177,26 @@ void Game::checkVersion(const VersionTuple &min_version) {
             << std::get<2>(min_version)  << endl;
         QTextStream(stdout)
             << "Check https://github.com/gcp/leela-zero for updates." << endl;
+#if defined(LEELA_GTP)
+        return;
+#else
         exit(EXIT_FAILURE);
+#endif
     }
     if (!eatNewLine()) {
         error(Game::WRONG_GTP);
+#if defined(LEELA_GTP)
+        return;
+#else
         exit(EXIT_FAILURE);
+#endif
     }
 }
 
 bool Game::gameStart(const VersionTuple &min_version,
+#if defined(LEELA_GTP)
+                     Management *boss,
+#endif
                      const QString &sgf,
                      const int moves) {
     start(m_engine.getCmdLine());
@@ -182,6 +208,21 @@ bool Game::gameStart(const VersionTuple &min_version,
     // check any return values.
     checkVersion(min_version);
     QTextStream(stdout) << "Engine has started." << endl;
+#if defined(LEELA_GTP)
+    if (boss->gtp_config()->load_training_data) {
+        QDir dir(boss->gtp_config()->training_data_path);
+        QStringList trainfilter;
+        trainfilter << "*.0.gz" << "*.train";
+        QStringList trainfiles = dir.entryList(trainfilter, QDir::Files | QDir::Readable, QDir::Name);
+        for (int tmpi = 0; tmpi < trainfiles.size(); tmpi++) {
+            QString load_training("load_training " +
+                                  boss->gtp_config()->training_data_path +
+                                  trainfiles[tmpi]);
+            sendGtpCommand(qPrintable(load_training));
+        }
+        QTextStream(stdout) << "load " << trainfiles.size() << " training files\n";
+    }
+#endif
     //If there is an sgf file to start playing from then it will contain
     //whether there is handicap in use. If there is no sgf file then instead,
     //check whether there are any handicap commands to send (these fail
@@ -192,7 +233,11 @@ bool Game::gameStart(const VersionTuple &min_version,
         QFile sgfFile(sgf + ".sgf");
         if (!sgfFile.exists()) {
             QTextStream(stdout) << "Cannot find sgf file " << sgf << endl;
+#if defined(LEELA_GTP)
+            return false;
+#else
             exit(EXIT_FAILURE);
+#endif
         }
         sgfFile.open(QIODevice::Text | QIODevice::ReadOnly);
         const auto sgfData = QTextStream(&sgfFile).readAll();
@@ -212,7 +257,11 @@ bool Game::gameStart(const VersionTuple &min_version,
             if (!sendGtpCommand(command))
             {
                 QTextStream(stdout) << "GTP failed on: " << command << endl;
+#if defined(LEELA_GTP)
+                return false;
+#else
                 exit(EXIT_FAILURE);
+#endif
             }
             m_isHandicap = true;
             m_blackToMove = false;
@@ -224,27 +273,13 @@ bool Game::gameStart(const VersionTuple &min_version,
         if (!sendGtpCommand(command))
         {
             QTextStream(stdout) << "GTP failed on: " << command << endl;
+#if defined(LEELA_GTP)
+            return false;
+#else
             exit(EXIT_FAILURE);
+#endif
         }
     }
-#if defined(ANCIENT_CHINESE_RULE_ENABLED)
-    QDir dir(m_traindatapath);
-    QStringList trainfilter;
-    trainfilter << "*.0.gz" << "*.train";
-    QStringList trainfiles = dir.entryList(trainfilter, QDir::Files | QDir::Readable, QDir::Name);
-    for (int tmpi = 0; tmpi < trainfiles.size(); tmpi++) {
-        sendGtpCommand(qPrintable("load_training " + m_traindatapath + trainfiles[tmpi]));
-    }
-    QDir dir1("./training_sgfs/");
-    QStringList trainfilter1;
-    trainfilter1 << "*.sgf";
-    QStringList trainsgfs = dir1.entryList(trainfilter1,  QDir::Files | QDir::Readable, QDir::Name);
-    for (int tmpi = 0; tmpi < trainsgfs.size(); tmpi++) {
-        sendGtpCommand(qPrintable("loadsgf ./training_sgfs/" + trainsgfs[tmpi]));
-    }
-    QTextStream(stdout) << "load " << trainfiles.size() << " training files and "
-                        << trainsgfs.size() << " training sgfs. \n";
-#endif
     QTextStream(stdout) << "Starting GTP commands sent." << endl;
     return true;
 }
@@ -280,7 +315,11 @@ bool Game::waitReady() {
     return true;
 }
 
+#if defined(LEELA_GTP)
+int Game::readMove() {
+#else
 bool Game::readMove() {
+#endif
     char readBuffer[256];
     int readCount = readLine(readBuffer, 256);
     if (readCount <= 3 || readBuffer[0] != '=') {
@@ -288,7 +327,11 @@ bool Game::readMove() {
         QTextStream(stdout) << "Error read " << readCount << " '";
         QTextStream(stdout) << readBuffer << "'" << endl;
         terminate();
+#if defined(LEELA_GTP)
+        return 0;
+#else
         return false;
+#endif
     }
     // Skip "= "
     m_moveDone = readBuffer;
@@ -296,7 +339,11 @@ bool Game::readMove() {
     m_moveDone = m_moveDone.simplified();
     if (!eatNewLine()) {
         error(Game::PROCESS_DIED);
+#if defined(LEELA_GTP)
+        return 0;
+#else
         return false;
+#endif
     }
     if (readCount == 0) {
         error(Game::WRONG_GTP);
@@ -304,17 +351,52 @@ bool Game::readMove() {
     QTextStream(stdout) << m_moveNum << " (";
     QTextStream(stdout) << (m_blackToMove ? "B " : "W ") << m_moveDone << ") ";
     QTextStream(stdout).flush();
+#if defined(LEELA_GTP)
+    int ret = 0;
+#endif
     if (m_moveDone.compare(QStringLiteral("pass"),
                           Qt::CaseInsensitive) == 0) {
         m_passes++;
+#if defined(LEELA_GTP)
+        ret = 200000; // means pass
+        if (m_blackToMove)
+            ret += 10000;
+        else
+            ret += 20000;
+#endif
     } else if (m_moveDone.compare(QStringLiteral("resign"),
                                  Qt::CaseInsensitive) == 0) {
         m_resignation = true;
         m_blackResigned = m_blackToMove;
+#if defined(LEELA_GTP)
+        ret = 300000;
+        if (m_blackResigned)
+            ret += 10000;
+        else
+            ret += 20000;
+#endif
     } else {
         m_passes = 0;
+#if defined(LEELA_GTP)
+        if (m_blackToMove)
+            ret = 10000;
+        else
+            ret = 20000;
+        ret += (m_moveDone.toLatin1().data()[0] - 'A') * 100;
+        if (m_moveDone.toLatin1().data()[0] > 'I')
+            ret -= 100;
+        if (m_moveDone.length() == 3)
+            ret += (m_moveDone.toLatin1().data()[1] - '0') * 10
+                    + m_moveDone.toLatin1().data()[2] - '1';
+        else
+            ret += m_moveDone.toLatin1().data()[1] - '1';
+#endif
     }
+#if defined(LEELA_GTP)
+    return ret;
+#else
     return true;
+#endif
 }
 
 bool Game::setMove(const QString& m) {
@@ -407,6 +489,13 @@ bool Game::saveTraining() {
      QTextStream(stdout) << "Saving " << m_fileName + ".train" << endl;
      return sendGtpCommand(qPrintable("save_training " + m_fileName + ".train"));
 }
+
+#if defined(LEELA_GTP)
+bool Game::dumpSupervised(const QString &sgf, const QString &train) {
+    QTextStream(stdout) << "Dumping supervised " << sgf + " as " << train << endl;
+    return sendGtpCommand(qPrintable("dump_supervised " + sgf + " " + train));
+}
+#endif
 
 
 bool Game::loadSgf(const QString &fileName) {

@@ -31,6 +31,9 @@ public:
         Waited,
         StoreMatch,
         StoreSelfPlayed,
+#if defined(LEELA_GTP)
+        Done,
+#endif
         Error
     };
     Result() = default;
