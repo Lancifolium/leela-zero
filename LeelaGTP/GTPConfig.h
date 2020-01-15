@@ -31,6 +31,7 @@
 #include <QSpinBox>
 #include <QWidget>
 
+class LeelaGTP;
 
 struct GTPConfigElements {
     enum JobType {
@@ -108,6 +109,8 @@ public:
     void copyfrom(GTPConfigElements *m_config);
 
 private:
+    friend class LeelaGTP;
+    void retranslate();
 
 private slots:
     void on_noise();

@@ -18,30 +18,26 @@
 */
 
 #include "LeelaGTP.h"
+#include "Game.h"
+#include "Translation.h"
 
-#include <QtCore/QTimer>
 #ifdef WIN32
 #include <direct.h>
 #endif
 #include <QPainter>
-#include <iostream>
 #include <QTextStream>
-#include "Game.h"
+#include <QtCore/QTimer>
 
 LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
         QMainWindow(parent),
         app(app),
         config_dialog(this, &config),
         is_running(false),
-        draw_imgbord(":/images/bord.png"),
-        draw_imgw(":/images/movwhite.png"),
-        draw_imgb(":/images/movblack.png"),
-        draw_imgcur(":/images/cur_mov.png"),
-        win_size(600), win_gap(30), win_xlb(9), win_ylb(9) {
+        win_size(600), win_gap(30), win_xlb(3), win_ylb(3) {
     this->config_dialog.setModal(true);
 
-    this->setWindowTitle("里拉訓練GTP程序");
-    //this->setWindowTitle("Leela AutoGTP (Local Version)");
+
+    this->setWindowTitle(Trans("leelagtp_title"));
     this->setFixedSize(900, 720);
 
     show_board = new QLabel(this);
@@ -57,33 +53,37 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
     show_stones->update();
 
 
-    this->butt_run = new QPushButton("開始", this);
+    this->butt_run = new QPushButton(Trans("run"), this);
+    this->butt_run->setToolTip(Trans("tip_run"));
     this->butt_run->setGeometry(660, 240, 84, 24);
     connect(butt_run, SIGNAL(clicked(bool)), this, SLOT(on_runbutt()));
 
-    label_timeout = new QLabel("訓練時間（分鍾）：", this);
-    label_timeout->setGeometry(660, 306, 120, 24);
+    this->label_timeout = new QLabel(Trans("timeout"), this);
+    this->label_timeout->setToolTip(Trans("tip_timeout"));
+    this->label_timeout->setGeometry(660, 306, 120, 24);
     this->butt_timeout = new QSpinBox(this);
     this->butt_timeout->setGeometry(660, 330, 84, 24);
     this->butt_timeout->setRange(0, 1000000);
     this->butt_timeout->setValue(config.run_timeout);
     this->butt_timeout->setSingleStep(10);
-    this->butt_timeout->setSpecialValueText(tr("不限"));
+    this->butt_timeout->setSpecialValueText(Trans("unlimited"));
     connect(butt_timeout, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.run_timeout = val; });
 
-    label_maxgames = new QLabel("最多訓練局數：", this);
-    label_maxgames->setGeometry(660, 366, 120, 24);
+    this->label_maxgames = new QLabel(Trans("max_games"), this);
+    this->label_maxgames->setToolTip(Trans("tip_max_games"));
+    this->label_maxgames->setGeometry(660, 366, 120, 24);
     this->butt_maxgames = new QSpinBox(this);
     this->butt_maxgames->setGeometry(660, 390, 84, 24);
     this->butt_maxgames->setRange(0, 1000000);
     this->butt_maxgames->setValue(config.run_maxgames);
     this->butt_maxgames->setSingleStep(10);
-    this->butt_maxgames->setSpecialValueText(tr("不限"));
+    this->butt_maxgames->setSpecialValueText(Trans("unlimited"));
     connect(butt_maxgames, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.run_maxgames = val; });
 
-    this->label_gpugames = new QLabel("單GPU上同時下棋局數：", this);
+    this->label_gpugames = new QLabel(Trans("max_gpugames"), this);
+    this->label_gpugames->setToolTip(Trans("tip_max_gpugames"));
     this->label_gpugames->setGeometry(660, 426, 150, 24);
     this->butt_gpugames = new QSpinBox(this);
     this->butt_gpugames->setGeometry(660, 450, 84, 24);
@@ -95,30 +95,43 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
     connect(butt_gpugames, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.gpu_games = val; });
 
-    this->butt_configs = new QPushButton("更多设置...", this);
+    this->butt_configs = new QPushButton(Trans("more_configs"), this);
+    this->butt_configs->setToolTip(Trans("tip_more_configs"));
     this->butt_configs->setGeometry(660, 516, 84, 24);
     connect(butt_configs, SIGNAL(clicked(bool)), this, SLOT(on_furconfigs()));
 
 
-    this->butt_keepSgf = new QCheckBox("是否保存棋譜文件", this);
+    this->butt_keepSgf = new QCheckBox(Trans("keep_sgf"), this);
     this->butt_keepSgf->setGeometry(60, 606, 600, 24);
     this->butt_keepSgf->setChecked(config.keepSgf);
     connect(butt_keepSgf, SIGNAL(toggled(bool)), this, SLOT(on_keepSgf()));
-    this->butt_sgfpath = new QPushButton("打開路徑...", this);
-    this->butt_sgfpath->setGeometry(60, 630, 84, 24);
+    this->butt_sgfpath = new QPushButton(Trans("open_filepath"), this);
+    this->butt_sgfpath->setToolTip(Trans("tip_open_filepath"));
+    this->butt_sgfpath->setFocus();
+    this->butt_sgfpath->setGeometry(60, 630, 120, 24);
     connect(butt_sgfpath, SIGNAL(clicked(bool)), this, SLOT(on_sgfpathbutt()));
     butt_sgfpath->setEnabled(config.keepSgf);
     this->show_sgfpath = new QLabel(this->config.sgf_path, this);
-    this->show_sgfpath->setGeometry(160, 630, 600, 24);
+    this->show_sgfpath->setGeometry(196, 630, 600, 24);
     show_sgfpath->setEnabled(config.keepSgf);
-    this->show_sgfpath->setText("默認路徑：" + config.sgf_path);
+    this->show_sgfpath->setText(Trans("default_path") + config.sgf_path);
+    this->show_sgfpath->setToolTip(Trans("default_path") + config.sgf_path);
 
-    this->butt_netfile = new QPushButton("打開自定义权重文件", this);
+    this->butt_netfile = new QPushButton(Trans("net_file"), this);
+    this->butt_netfile->setToolTip(Trans("tip_net_file"));
     this->butt_netfile->setGeometry(60, 660, 120, 24);
     connect(butt_netfile, SIGNAL(clicked(bool)), this, SLOT(on_netfilebutt()));
     this->show_netfile = new QLabel(this->config.net_file, this);
     this->show_netfile->setGeometry(196, 660, 600, 24);
-    this->show_netfile->setText("默認文件：" + config.net_filepath);
+    this->show_netfile->setText(Trans("default_file") + config.net_filepath);
+    this->show_netfile->setToolTip(Trans("default_file") + config.net_filepath);
+
+    this->butt_translation = new QComboBox(this);
+    this->butt_translation->setGeometry(660, 33, 48, 24);
+    this->butt_translation->addItem(QIcon(":/images/chn.png"), "", LeelaGTPLocale::Cn);
+    this->butt_translation->addItem(QIcon(":/images/eng.png"), "", LeelaGTPLocale::En);
+    this->butt_translation->setToolTip(Trans("tip_translation"));
+    connect(butt_translation, SIGNAL(activated(int)), this, SLOT(on_translation()));
 }
 
 LeelaGTP::~LeelaGTP() {
@@ -161,20 +174,22 @@ void LeelaGTP::on_keepSgf() {
 }
 
 void LeelaGTP::on_sgfpathbutt() {
-    QString sgf_path = QFileDialog::getExistingDirectory(this, tr("保存路徑"), ".");
+    QString sgf_path = QFileDialog::getExistingDirectory(this, Trans("msg_sgf_save_path"), ".");
     if (!sgf_path.isEmpty()) {
         config.sgf_path = sgf_path;
-        show_sgfpath->setText("另存为：" + config.sgf_path);
+        this->show_sgfpath->setText(Trans("save_to") + config.sgf_path);
+        this->show_sgfpath->setToolTip(Trans("save_to") + config.sgf_path);
     }
 }
 
 void LeelaGTP::on_netfilebutt() {
-    QString filepath = QFileDialog::getOpenFileName(this, tr("权重文件"));
+    QString filepath = QFileDialog::getOpenFileName(this, Trans("msg_net_path"));
     if (!filepath.isEmpty()) {
         config.net_filepath = filepath;
         QFileInfo file(config.net_filepath);
         config.net_file = file.fileName();
         show_netfile->setText(config.net_filepath);
+        show_netfile->setToolTip(config.net_filepath);
     }
 }
 
@@ -189,32 +204,42 @@ void LeelaGTP::on_runbutt() {
     if (is_running) {
         // Now running
         _enable_all_elements(false);
-        butt_run->setText("中止");
+        butt_run->setText(Trans("stop"));
         _run();
-    }
-    else {
+    } else {
         // Now exit
         if (boss) {
             //QTextStream(stdout) << "sendquit in on runbutt\n";
             boss->sendQuit();
-        }
-        else {
+        } else {
             _enable_all_elements(true);
-            butt_run->setText("開始");
+            butt_run->setText(Trans("run"));
         }
+    }
+}
+
+void LeelaGTP::on_translation() {
+    if (this->butt_translation->currentIndex() == __leela_gtp_locale) {
+        return;
+    } else {
+        __leela_gtp_locale = this->butt_translation->currentIndex() == 0 ?
+                    LeelaGTPLocale::Cn : LeelaGTPLocale::En;
+        this->retranslate();
     }
 }
 
 int LeelaGTP::_run() {
     if (config.keepSgf) {
         if (!QDir().mkpath(config.sgf_path)) {
-            QMessageBox::information(this, "目錄創建失败", "创建棋譜保存目錄失敗！");
+            QMessageBox::information(this, Trans("msg_create_path_fail"),
+                                     Trans("msg_sgf_path_fail_details"));
             on_bossexit();
             return EXIT_FAILURE;
         }
     }
     if (!QDir().mkpath(config.training_data_path)) {
-        QMessageBox::information(this, "目錄创建失敗", "创建訓練數據保存目錄失敗！");
+        QMessageBox::information(this, Trans("msg_create_path_fail"),
+                                 Trans("msg_train_path_fail_details"));
         on_bossexit();
         return EXIT_FAILURE;
     }
@@ -246,18 +271,17 @@ int LeelaGTP::_run() {
 void LeelaGTP::on_bossexit() {
     is_running = false;
     _enable_all_elements(true);
-    butt_run->setText("開始訓練");
+    butt_run->setText(Trans("run"));
 
     if (boss->terminate_leelaz())
-        QMessageBox::information(this, "错误，中止训练",
-                                 "没有找到leelaz执行文件或权重文件\n请您确认设置是否正确");
+        QMessageBox::information(this, Trans("msg_err_stop"),
+                                 Trans("msg_err_stop_details"));
 
     delete boss;
 
     boss = nullptr;
     draw_mov.init();
     show_stones->update();
-    //QTextStream(stdout) << "finish on_bossexit\n";
 }
 
 void LeelaGTP::on_recvmove(int move) {
@@ -309,7 +333,7 @@ void LeelaGTP::drawing_board() {
     QPainter pain(show_board);
     QRect target(win_gap / 2, win_gap / 2,
                  win_gap * 19, win_gap * 19);
-    pain.drawImage(target, draw_imgbord);
+    pain.drawImage(target, QImage(":/images/bord.png"));
     pain.setRenderHint(QPainter::Antialiasing, true); // 使得邊緣柔和
 
     int tmpi, tmpj;
@@ -345,14 +369,14 @@ void LeelaGTP::drawing_stones() {
                              tmpj * win_gap + win_gap * 11 / 20,
                              win_gap * 9 / 10,
                              win_gap * 9 / 10);
-                pain.drawImage(target, draw_imgb);
+                pain.drawImage(target, QImage(":/images/movblack.png"));
             }
             else if (draw_mov.ston[tmpi][tmpj] == 2) {
                 QRect target(tmpi * win_gap + win_gap * 11 / 20,
                              tmpj * win_gap + win_gap * 11 / 20,
                              win_gap * 9 / 10,
                              win_gap * 9 / 10);
-                pain.drawImage(target, draw_imgw);
+                pain.drawImage(target, QImage(":/images/movwhite.png"));
             }
         }
     } // finished for
@@ -361,6 +385,47 @@ void LeelaGTP::drawing_stones() {
         QRect target(draw_mov.currmove / 100 * win_gap + win_gap,
                      draw_mov.currmove % 100 * win_gap + win_gap,
                      win_gap / 3, win_gap / 3);
-        pain.drawImage(target, draw_imgcur);
+        pain.drawImage(target, QImage(":/images/cur_mov.png"));
     }
+}
+
+void LeelaGTP::retranslate() {
+    this->setWindowTitle(Trans("leelagtp_title"));
+
+    if (is_running)
+        this->butt_run->setText(Trans("stop"));
+    else
+        this->butt_run->setText(Trans("run"));
+    this->butt_run->setToolTip(Trans("tip_run"));
+
+    this->label_timeout->setText(Trans("timeout"));
+    this->label_timeout->setToolTip(Trans("tip_timeout"));
+    this->butt_timeout->setSpecialValueText(Trans("unlimited"));
+
+    this->label_maxgames->setText(Trans("max_games"));
+    this->label_maxgames->setToolTip(Trans("tip_max_games"));
+    this->butt_maxgames->setSpecialValueText(Trans("unlimited"));
+
+    this->label_gpugames->setText(Trans("max_gpugames"));
+    this->label_gpugames->setToolTip(Trans("tip_max_gpugames"));
+
+    this->butt_configs->setText(Trans("more_configs"));
+    this->butt_configs->setToolTip(Trans("tip_more_configs"));
+
+    this->butt_keepSgf->setText(Trans("keep_sgf"));
+    this->butt_sgfpath->setText(Trans("open_filepath"));
+    this->butt_sgfpath->setToolTip(Trans("tip_open_filepath"));
+
+    if (config.sgf_path == "./sgfs/") {
+        this->show_sgfpath->setText(Trans("default_path") + config.sgf_path);
+        this->show_sgfpath->setToolTip(Trans("default_path") + config.sgf_path);
+    }
+    this->butt_netfile->setText(Trans("net_file"));
+    this->butt_netfile->setToolTip(Trans("tip_net_file"));
+    if (config.net_filepath == "./networks/weights.txt") {
+        this->show_netfile->setText(Trans("default_file") + config.net_filepath);
+        this->show_netfile->setToolTip(Trans("default_file") + config.net_filepath);
+    }
+
+    config_dialog.retranslate();
 }

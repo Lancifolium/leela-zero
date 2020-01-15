@@ -30,7 +30,8 @@ SOURCES += main.cpp \
     ../AutoGTP/Management.cpp \
     LeelaGTP.cpp \
     MovLancifolium.cpp \
-    GTPConfig.cpp
+    GTPConfig.cpp \
+    Translation.cpp
 
 HEADERS += \
     ../AutoGTP/Game.h \
@@ -41,7 +42,8 @@ HEADERS += \
     ../AutoGTP/Management.h \
     LeelaGTP.h \
     MovLancifolium.h \
-    GTPConfig.h
+    GTPConfig.h \
+    Translation.h
 
 DISTFILES += \
     leelagtp.rc

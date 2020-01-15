@@ -18,6 +18,7 @@
 */
 
 #include "GTPConfig.h"
+#include "Translation.h"
 #include <QListView>
 #include <QTime>
 #include <QtGlobal>
@@ -88,11 +89,12 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
         main_config(m_config) {
     assert(main_config != nullptr);
 
-    this->setWindowTitle("Leela GTP further configurations");
+    this->setWindowTitle(Trans("gtpconfig_title"));
     this->setFixedSize(600, 600);
 
 
-    this->label_random = new QLabel("前几步更随机：", this);
+    this->label_random = new QLabel(Trans("random"), this);
+    this->label_random->setToolTip(Trans("tip_random"));
     this->label_random->setGeometry(60, 66, 150, 24);
     this->butt_random = new QSpinBox(this);
     this->butt_random->setGeometry(60, 90, 84, 24);
@@ -102,8 +104,9 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
     connect(butt_random, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.random_num = val; });
 
-    this->label_loopvisits = new QLabel("设置循环遍历步数", this);
-    this->label_loopvisits->setGeometry(240, 66, 90, 24);
+    this->label_loopvisits = new QLabel(Trans("loop_visits"), this);
+    this->label_loopvisits->setToolTip(Trans("tip_loop_visits"));
+    this->label_loopvisits->setGeometry(240, 66, 150, 24);
     this->butt_loopvisits = new QSpinBox(this);
     this->butt_loopvisits->setGeometry(240, 90, 84, 24);
     this->butt_loopvisits->setRange(100, 100000);
@@ -112,8 +115,9 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
     connect(butt_loopvisits, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.loop_visits = val; });
 
-    this->label_resignpct = new QLabel("投子认输胜率", this);
-    this->label_resignpct->setGeometry(420, 66, 90, 24);
+    this->label_resignpct = new QLabel(Trans("resign"), this);
+    this->label_resignpct->setToolTip(Trans("tip_resign"));
+    this->label_resignpct->setGeometry(420, 66, 150, 24);
     this->show_resignpct = new QLabel("%", this);
     this->show_resignpct->setGeometry(460, 90, 24, 24);
     this->butt_resignpct = new QSpinBox(this);
@@ -124,72 +128,90 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
             [=](int val) { config.resignation_percent = val; });
 
 
-    this->butt_enablenoise = new QCheckBox("是否允许策略网络随机", this);
+    this->butt_enablenoise = new QCheckBox(Trans("noise"), this);
     this->butt_enablenoise->setGeometry(60, 120, 150, 24);
     connect(butt_enablenoise, SIGNAL(toggled(bool)), this, SLOT(on_noise()));
 
-    this->butt_heuristic = new QCheckBox("是否使用启发式智能弃权", this);
+    this->butt_heuristic = new QCheckBox(Trans("heuristic"), this);
     this->butt_heuristic->setGeometry(60, 150, 150, 24);
     connect(butt_heuristic, SIGNAL(toggled(bool)), this, SLOT(on_heuristic()));
 
-    this->butt_loaddata = new QCheckBox("是否加载保存数据文件", this);
+    this->butt_loaddata = new QCheckBox(Trans("load_data"), this);
     this->butt_loaddata->setGeometry(60, 180, 360, 24);
     connect(butt_loaddata, SIGNAL(toggled(bool)), this, SLOT(on_loadtrainingdata()));
 
-    this->label_exlzparam = new QLabel("设置附加 leelaz 选项:", this);
-    this->label_exlzparam->setGeometry(60, 216, 150, 24);
+    this->butt_trainingdatapath = new QPushButton(Trans("open_train_data_path"), this);
+    this->butt_trainingdatapath->setToolTip(Trans("tip_open_train_data_path"));
+    this->butt_trainingdatapath->setGeometry(60, 210, 108, 24);
+    connect(butt_trainingdatapath, SIGNAL(clicked(bool)), this, SLOT(on_trainingdatapath()));
+    this->show_trainingdatapath =
+            new QLabel(Trans("default_path") + config.training_data_path, this);
+    this->show_trainingdatapath->setGeometry(176, 210, 360, 24);
+
+
+    this->label_exlzparam = new QLabel(Trans("extral_params"), this);
+    this->label_exlzparam->setToolTip(Trans("tip_extral_params"));
+    this->label_exlzparam->setGeometry(60, 246, 150, 24);
     this->edit_exlzparam = new QLineEdit(config.extral_lzparam, this);
-    this->edit_exlzparam->setGeometry(60, 240, 400, 24);
+    this->edit_exlzparam->setGeometry(60, 270, 400, 24);
     connect(edit_exlzparam, SIGNAL(editingFinished()), this, SLOT(on_exlzparam()));
 
     /*
      * Following is Job Type settings.
      */
 
-    this->label_jobtype = new QLabel("选择任务类型:", this);
-    this->label_jobtype->setGeometry(60, 276, 150, 24);
+    this->label_jobtype = new QLabel(Trans("job_type"), this);
+    this->label_jobtype->setToolTip(Trans("tip_job_type"));
+    this->label_jobtype->setGeometry(60, 306, 150, 24);
     this->butt_jobtype = new QComboBox(this);
-    this->butt_jobtype->setGeometry(60, 300, 120, 24);
-    this->butt_jobtype->addItem("self", GTPConfigElements::JobType::LocalProduction);
-    this->butt_jobtype->addItem("match", GTPConfigElements::JobType::LocalValidation);
-    this->butt_jobtype->addItem("train", GTPConfigElements::JobType::OnlineJob);
-    this->butt_jobtype->addItem("sgf-training", GTPConfigElements::JobType::DumpSupervised);
+    this->butt_jobtype->setToolTip(Trans("tip_job_type"));
+    this->butt_jobtype->setGeometry(60, 330, 120, 24);
+    this->butt_jobtype->addItem(Trans("type_local_production"),
+                                GTPConfigElements::JobType::LocalProduction);
+    this->butt_jobtype->addItem(Trans("type_local_validation"),
+                                GTPConfigElements::JobType::LocalValidation);
+    this->butt_jobtype->addItem(Trans("type_online"),
+                                GTPConfigElements::JobType::OnlineJob);
+    this->butt_jobtype->addItem(Trans("type_dump_supervised"),
+                                GTPConfigElements::JobType::DumpSupervised);
     connect(butt_jobtype, SIGNAL(activated(int)), this, SLOT(on_jobtype()));
 
-    this->butt_trainingdatapath = new QPushButton("打开训练文件目录", this);
-    this->butt_trainingdatapath->setGeometry(60, 330, 100, 24);
-    connect(butt_trainingdatapath, SIGNAL(clicked(bool)), this, SLOT(on_trainingdatapath()));
-    this->show_trainingdatapath =
-            new QLabel("默認目录：" + config.training_data_path, this);
-    this->show_trainingdatapath->setGeometry(176, 330, 360, 24);
 
-
-    this->butt_compnetfile = new QPushButton("打开对抗权重文件", this);
-    this->butt_compnetfile->setGeometry(60, 360, 100, 24);
+    this->butt_compnetfile = new QPushButton(Trans("open_net_weights_file"), this);
+    this->butt_compnetfile->setToolTip(Trans("tip_open_net_weights_file"));
+    this->butt_compnetfile->setGeometry(60, 360, 108, 24);
     connect(butt_compnetfile, SIGNAL(clicked(bool)), this, SLOT(on_compnetfile()));
     this->show_compnetfile =
-        new QLabel("默認文件：" + config.net_component_filepath, this);
+            new QLabel(Trans("default_file") + config.net_component_filepath, this);
+    this->show_compnetfile->setToolTip(
+            Trans("default_file") + config.net_component_filepath);
     this->show_compnetfile->setGeometry(176, 360, 400, 24);
 
-    this->butt_dumpsgffile = new QPushButton("打开训练棋谱文件", this);
-    this->butt_dumpsgffile->setGeometry(60, 390, 100, 24);
+    this->butt_dumpsgffile = new QPushButton(Trans("open_train_sgf_file"), this);
+    this->butt_dumpsgffile->setToolTip(Trans("tip_open_train_sgf_file"));
+    this->butt_dumpsgffile->setGeometry(60, 390, 108, 24);
     connect(butt_dumpsgffile, SIGNAL(clicked(bool)), this, SLOT(on_dumpsgffile()));
     this->show_dumpsgffile =
-        new QLabel("默認文件：" + config.dump_sgf_file, this);
+            new QLabel(Trans("default_file") + config.dump_sgf_file, this);
+    this->show_dumpsgffile->setToolTip(
+            Trans("default_file") + config.dump_sgf_file);
     this->show_dumpsgffile->setGeometry(176, 390, 400, 24);
 
-    this->butt_dumpdatafile = new QPushButton("保存训练数据文件", this);
-    this->butt_dumpdatafile->setGeometry(60, 420, 100, 24);
+    this->butt_dumpdatafile = new QPushButton(Trans("save_net_weights_file"), this);
+    this->butt_dumpdatafile->setToolTip(Trans("tip_save_net_weights_file"));
+    this->butt_dumpdatafile->setGeometry(60, 420, 108, 24);
     connect(butt_dumpdatafile, SIGNAL(clicked(bool)), this, SLOT(on_savedumpdatafile()));
     this->show_dumpdatafile =
-        new QLabel("默認文件：" + config.dump_data_file, this);
+            new QLabel(Trans("default_file") + config.dump_data_file, this);
+    this->show_dumpdatafile->setToolTip(
+            Trans("default_file") + config.dump_data_file);
     this->show_dumpdatafile->setGeometry(176, 420, 400, 24);
 
 
-    this->butt_okay = new QPushButton("确定", this);
+    this->butt_okay = new QPushButton(Trans("okay"), this);
     this->butt_okay->setGeometry(60, 510, 84, 24);
     connect(butt_okay, SIGNAL(clicked(bool)), this, SLOT(on_okay()));
-    this->butt_cancel = new QPushButton("取消", this);
+    this->butt_cancel = new QPushButton(Trans("cancel"), this);
     this->butt_cancel->setGeometry(150, 510, 84, 24);
     connect(butt_cancel, SIGNAL(clicked(bool)), this, SLOT(on_cancel()));
 }
@@ -228,18 +250,122 @@ void GTPConfig::drawwindow() {
     this->butt_enablenoise->setChecked(config.enable_noise);
     this->butt_heuristic->setChecked(config.heuristic);
     this->butt_loaddata->setChecked(config.load_training_data);
+    if (config.training_data_path == "./data/") {
+        this->show_trainingdatapath->setText(
+                Trans("default_path") + config.training_data_path);
+        this->show_trainingdatapath->setToolTip(
+                Trans("default_path") + config.training_data_path);
+    } else {
+        this->show_trainingdatapath->setText(config.training_data_path);
+        this->show_trainingdatapath->setToolTip(config.training_data_path);
+    }
+
     this->edit_exlzparam->setText(config.extral_lzparam);
     this->butt_jobtype->setCurrentIndex(config.job_type);
+
     on_jobtype();
-    this->show_trainingdatapath->setText(config.training_data_path);
-    this->show_compnetfile->setText(config.net_component_filepath);
-    this->show_dumpsgffile->setText(config.dump_sgf_file);
-    this->show_dumpdatafile->setText(config.dump_data_file);
+
+    if (config.net_component_filepath == "./networks/component_weights.txt") {
+        this->show_compnetfile->setText(
+                Trans("default_file") + config.net_component_filepath);
+        this->show_compnetfile->setToolTip(
+                Trans("default_file") + config.net_component_filepath);
+    } else {
+        this->show_compnetfile->setText(config.net_component_filepath);
+        this->show_compnetfile->setToolTip(config.net_component_filepath);
+    }
+
+    if (config.dump_sgf_file == "./sgfs/tmp.sgf") {
+        this->show_dumpsgffile->setText(
+                Trans("default_file") + config.dump_sgf_file);
+        this->show_dumpsgffile->setToolTip(
+                Trans("default_file") + config.dump_sgf_file);
+    } else {
+        this->show_dumpsgffile->setText(config.dump_sgf_file);
+        this->show_dumpsgffile->setToolTip(config.dump_sgf_file);
+    }
+
+    if (config.dump_data_file == "./train.txt") {
+        this->show_dumpdatafile->setText(
+                Trans("default_file") + config.dump_data_file);
+        this->show_dumpdatafile->setToolTip(
+                Trans("default_file") + config.dump_data_file);
+    } else {
+        this->show_dumpdatafile->setText(config.dump_data_file);
+        this->show_dumpdatafile->setToolTip(config.dump_data_file);
+    }
 }
 
 void GTPConfig::copyfrom(GTPConfigElements *m_config) {
     if (m_config != nullptr)
         m_config->copyto(&config);
+}
+
+void GTPConfig::retranslate() {
+    this->setWindowTitle(Trans("gtpconfig_title"));
+    this->label_random->setText(Trans("random"));
+    this->label_random->setToolTip(Trans("tip_random"));
+    this->label_loopvisits->setText(Trans("loop_visits"));
+    this->label_loopvisits->setToolTip(Trans("tip_loop_visits"));
+    this->label_resignpct->setText(Trans("resign"));
+    this->label_resignpct->setToolTip(Trans("tip_resign"));
+    this->butt_enablenoise->setText(Trans("noise"));
+    this->butt_heuristic->setText(Trans("heuristic"));
+
+    this->butt_loaddata->setText(Trans("load_data"));
+    this->butt_trainingdatapath->setText(Trans("open_train_data_path"));
+    this->butt_trainingdatapath->setToolTip(Trans("tip_open_train_data_path"));
+    if (config.training_data_path == "./data/") {
+        this->show_trainingdatapath->setText(
+                Trans("default_path") + config.training_data_path);
+        this->show_trainingdatapath->setToolTip(
+                Trans("default_path") + config.training_data_path);
+    }
+
+    this->label_exlzparam->setText(Trans("extral_params"));
+    this->label_exlzparam->setToolTip(Trans("tip_extral_params"));
+
+    this->label_jobtype->setText(Trans("job_type"));
+    this->label_jobtype->setToolTip(Trans("tip_job_type"));
+    this->butt_jobtype->setToolTip(Trans("tip_job_type"));
+    butt_jobtype->setItemText(GTPConfigElements::JobType::LocalProduction,
+                              Trans("type_local_production"));
+    butt_jobtype->setItemText(GTPConfigElements::JobType::LocalValidation,
+                              Trans("type_local_validation"));
+    butt_jobtype->setItemText(GTPConfigElements::JobType::OnlineJob,
+                              Trans("type_online"));
+    butt_jobtype->setItemText(GTPConfigElements::JobType::DumpSupervised,
+                              Trans("type_dump_supervised"));
+
+    this->butt_compnetfile->setText(Trans("open_net_weights_file"));
+    this->butt_compnetfile->setToolTip(Trans("tip_open_net_weights_file"));
+    if (config.net_component_filepath == "./networks/component_weights.txt") {
+        this->show_compnetfile->setText(
+                Trans("default_file") + config.net_component_filepath);
+        this->show_compnetfile->setToolTip(
+                Trans("default_file") + config.net_component_filepath);
+    }
+
+    this->butt_dumpsgffile->setText(Trans("open_train_sgf_file"));
+    this->butt_dumpsgffile->setToolTip(Trans("tip_open_train_sgf_file"));
+    if (config.dump_sgf_file == "./sgfs/tmp.sgf") {
+        this->show_dumpsgffile->setText(
+                Trans("default_file") + config.dump_sgf_file);
+        this->show_dumpsgffile->setToolTip(
+                Trans("default_file") + config.dump_sgf_file);
+    }
+
+    this->butt_dumpdatafile->setText(Trans("save_net_weights_file"));
+    this->butt_dumpdatafile->setToolTip(Trans("tip_save_net_weights_file"));
+    if (config.dump_data_file == "./train.txt") {
+        this->show_dumpdatafile->setText(
+                Trans("default_file") + config.dump_data_file);
+        this->show_dumpdatafile->setToolTip(
+                Trans("default_file") + config.dump_data_file);
+    }
+
+    this->butt_okay->setText(Trans("okay"));
+    this->butt_cancel->setText(Trans("cancel"));
 }
 
 void GTPConfig::on_noise() {
@@ -290,36 +416,41 @@ void GTPConfig::on_jobtype() {
 }
 
 void GTPConfig::on_compnetfile() {
-    QString filepath = QFileDialog::getOpenFileName(this, tr("权重文件"));
+    QString filepath = QFileDialog::getOpenFileName(this, Trans("msg_net_path"));
     if (!filepath.isEmpty()) {
         config.net_component_filepath = filepath;
         QFileInfo file(config.net_component_filepath);
         config.net_component_file = file.fileName();
         this->show_compnetfile->setText(config.net_component_filepath);
+        this->show_compnetfile->setToolTip(config.net_component_filepath);
     }
 }
 
 void GTPConfig::on_dumpsgffile() {
-    QString filepath = QFileDialog::getOpenFileName(this, tr("棋谱文件"));
+    QString filepath = QFileDialog::getOpenFileName(this, Trans("msg_sgf_path"));
     if (!filepath.isEmpty()) {
         config.dump_sgf_file = filepath;
         this->show_dumpsgffile->setText(config.dump_sgf_file);
+        this->show_dumpsgffile->setToolTip(config.dump_sgf_file);
     }
 }
 
 void GTPConfig::on_savedumpdatafile() {
-    QString filepath = QFileDialog::getOpenFileName(this, tr("保存训练数据文件"));
+    QString filepath =
+            QFileDialog::getOpenFileName(this, Trans("save_net_weights_file"));
     if (!filepath.isEmpty()) {
         config.dump_data_file = filepath;
         this->show_dumpdatafile->setText(config.dump_data_file);
+        this->show_dumpdatafile->setToolTip(config.dump_data_file);
     }
 }
 
 void GTPConfig::on_trainingdatapath() {
-    QString filepath = QFileDialog::getExistingDirectory(this, tr("训练文件所在目录"), ".");
+    QString filepath = QFileDialog::getExistingDirectory(this, Trans("open_train_data_path"), ".");
     if (!filepath.isEmpty()) {
         config.training_data_path = filepath;
-        show_trainingdatapath->setText(config.training_data_path);
+        this->show_trainingdatapath->setText(config.training_data_path);
+        this->show_trainingdatapath->setToolTip(config.training_data_path);
     }
 }
 

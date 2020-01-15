@@ -46,7 +46,6 @@ class LeelaGTP : public QMainWindow {
 public:
     LeelaGTP(QApplication *app, QWidget *parent = nullptr);
     ~LeelaGTP();
-    void drawwindow();
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
@@ -55,6 +54,7 @@ private:
 
     void drawing_board();
     void drawing_stones();
+    void retranslate();
 
 private slots:
     void on_keepSgf();
@@ -64,6 +64,7 @@ private slots:
     void on_runbutt();
     void on_bossexit();
     void on_recvmove(int);
+    void on_translation();
 
 private:
     QApplication *app;
@@ -101,6 +102,9 @@ private:
     QLabel *show_board;
     QLabel *show_stones;
 
+    // Job type chozen
+    QComboBox *butt_translation;
+
 
     GTPConfigElements config;
 
@@ -110,11 +114,6 @@ private:
     MovLancifolium draw_mov;
 
     /* 繪圖 */
-    QImage draw_imgbord; /* 棋盤 */
-    QImage draw_imgw; /* 白子 */
-    QImage draw_imgb; /* 黑子 */
-    QImage draw_imgcur; /* 當前落子 */
-
     int win_size; /* 棋盤尺寸 */
     int win_gap; /* = win_size / 20 */
     int win_xlb; /* 棋盤左上角的橫坐標 */

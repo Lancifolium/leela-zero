@@ -5,5 +5,7 @@
         <file>images/Lancifolium.ico</file>
         <file>images/movblack.png</file>
         <file>images/movwhite.png</file>
+        <file>images/chn.png</file>
+        <file>images/eng.png</file>
     </qresource>
 </RCC>

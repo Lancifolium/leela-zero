@@ -24,8 +24,10 @@ void MovLancifolium::init() {
     conflict = confmove = 0;
     memset(ston, 0, sizeof(char) * 676);
     memset(calcbord, 0, sizeof(char) * 676);
+#if defined (ANCIENT_CHINESE_RULE_ENABLED)
     ston[3][3] = ston[15][15] = 2;
     ston[3][15] = ston[15][3] = 1;
+#endif
     currmove = -1;
 }
 

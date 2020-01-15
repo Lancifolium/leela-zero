@@ -32,7 +32,7 @@ Game::Game(const Engine& engine) :
     m_engine(engine),
     m_isHandicap(false),
     m_resignation(false),
-#if defined(LEELA_GTP)
+#if defined(ANCIENT_CHINESE_RULE_ENABLED)
     m_blackToMove(false),
 #else
     m_blackToMove(true),
