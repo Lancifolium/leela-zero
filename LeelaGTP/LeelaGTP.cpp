@@ -32,6 +32,21 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
         QMainWindow(parent),
         app(app),
         config_dialog(this, &config),
+        butt_keepSgf(this),
+        butt_sgfpath(this),
+        butt_netfile(this),
+        show_netfile(this),
+        label_timeout(this),
+        butt_timeout(this),
+        label_maxgames(this),
+        butt_maxgames(this),
+        label_gpugames(this),
+        butt_gpugames(this),
+        butt_configs(this),
+        butt_run(this),
+        show_board(this),
+        show_stones(this),
+        butt_translation(this),
         is_running(false),
         win_size(600), win_gap(30), win_xlb(3), win_ylb(3) {
     this->config_dialog.setModal(true);
@@ -40,145 +55,122 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
     this->setWindowTitle(Trans("leelagtp_title"));
     this->setFixedSize(900, 720);
 
-    show_board = new QLabel(this);
-    show_board->installEventFilter(this);
-    show_board->setGeometry(QRect(win_xlb + win_gap / 2, win_ylb + win_gap / 2,
+    show_board.installEventFilter(this);
+    show_board.setGeometry(QRect(win_xlb + win_gap / 2, win_ylb + win_gap / 2,
                                  win_gap * 19.5, win_gap * 19.5));
-    show_board->update();
+    show_board.update();
 
-    show_stones = new QLabel(this);
-    show_stones->installEventFilter(this);
-    show_stones->setGeometry(QRect(win_xlb + win_gap / 2, win_ylb + win_gap / 2,
+    show_stones.installEventFilter(this);
+    show_stones.setGeometry(QRect(win_xlb + win_gap / 2, win_ylb + win_gap / 2,
                                  win_gap * 19.5, win_gap * 19.5));
-    show_stones->update();
+    show_stones.update();
 
 
-    this->butt_run = new QPushButton(Trans("run"), this);
-    this->butt_run->setToolTip(Trans("tip_run"));
-    this->butt_run->setGeometry(660, 240, 84, 24);
-    connect(butt_run, SIGNAL(clicked(bool)), this, SLOT(on_runbutt()));
+    this->butt_run.setText(Trans("run"));
+    this->butt_run.setToolTip(Trans("tip_run"));
+    this->butt_run.setGeometry(660, 240, 84, 24);
+    connect(&butt_run, SIGNAL(clicked(bool)), this, SLOT(on_runbutt()));
 
-    this->label_timeout = new QLabel(Trans("timeout"), this);
-    this->label_timeout->setToolTip(Trans("tip_timeout"));
-    this->label_timeout->setGeometry(660, 306, 120, 24);
-    this->butt_timeout = new QSpinBox(this);
-    this->butt_timeout->setGeometry(660, 330, 84, 24);
-    this->butt_timeout->setRange(0, 1000000);
-    this->butt_timeout->setValue(config.run_timeout);
-    this->butt_timeout->setSingleStep(10);
-    this->butt_timeout->setSpecialValueText(Trans("unlimited"));
-    connect(butt_timeout, QOverload<int>::of(&QSpinBox::valueChanged),
+    this->label_timeout.setText(Trans("timeout"));
+    this->label_timeout.setToolTip(Trans("tip_timeout"));
+    this->label_timeout.setGeometry(660, 306, 120, 24);
+    this->butt_timeout.setGeometry(660, 330, 84, 24);
+    this->butt_timeout.setRange(0, 1000000);
+    this->butt_timeout.setValue(config.run_timeout);
+    this->butt_timeout.setSingleStep(10);
+    this->butt_timeout.setSpecialValueText(Trans("unlimited"));
+    connect(&butt_timeout, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.run_timeout = val; });
 
-    this->label_maxgames = new QLabel(Trans("max_games"), this);
-    this->label_maxgames->setToolTip(Trans("tip_max_games"));
-    this->label_maxgames->setGeometry(660, 366, 120, 24);
-    this->butt_maxgames = new QSpinBox(this);
-    this->butt_maxgames->setGeometry(660, 390, 84, 24);
-    this->butt_maxgames->setRange(0, 1000000);
-    this->butt_maxgames->setValue(config.run_maxgames);
-    this->butt_maxgames->setSingleStep(10);
-    this->butt_maxgames->setSpecialValueText(Trans("unlimited"));
-    connect(butt_maxgames, QOverload<int>::of(&QSpinBox::valueChanged),
+    this->label_maxgames.setText(Trans("max_games"));
+    this->label_maxgames.setToolTip(Trans("tip_max_games"));
+    this->label_maxgames.setGeometry(660, 366, 120, 24);
+    this->butt_maxgames.setGeometry(660, 390, 84, 24);
+    this->butt_maxgames.setRange(0, 1000000);
+    this->butt_maxgames.setValue(config.run_maxgames);
+    this->butt_maxgames.setSingleStep(10);
+    this->butt_maxgames.setSpecialValueText(Trans("unlimited"));
+    connect(&butt_maxgames, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.run_maxgames = val; });
 
-    this->label_gpugames = new QLabel(Trans("max_gpugames"), this);
-    this->label_gpugames->setToolTip(Trans("tip_max_gpugames"));
-    this->label_gpugames->setGeometry(660, 426, 150, 24);
-    this->butt_gpugames = new QSpinBox(this);
-    this->butt_gpugames->setGeometry(660, 450, 84, 24);
-    this->butt_gpugames->setRange(1, 8);
-    this->butt_gpugames->setValue(config.gpu_games);
-    this->butt_gpugames->setSingleStep(1);
+    this->label_gpugames.setText(Trans("max_gpugames"));
+    this->label_gpugames.setToolTip(Trans("tip_max_gpugames"));
+    this->label_gpugames.setGeometry(660, 426, 150, 24);
+    this->butt_gpugames.setGeometry(660, 450, 84, 24);
+    this->butt_gpugames.setRange(1, 8);
+    this->butt_gpugames.setValue(config.gpu_games);
+    this->butt_gpugames.setSingleStep(1);
     //connect(butt_gamesNum, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
     //        [=] (int val) { int_gamesNum = val; });
-    connect(butt_gpugames, QOverload<int>::of(&QSpinBox::valueChanged),
+    connect(&butt_gpugames, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.gpu_games = val; });
 
-    this->butt_configs = new QPushButton(Trans("more_configs"), this);
-    this->butt_configs->setToolTip(Trans("tip_more_configs"));
-    this->butt_configs->setGeometry(660, 516, 84, 24);
-    connect(butt_configs, SIGNAL(clicked(bool)), this, SLOT(on_furconfigs()));
+    this->butt_configs.setText(Trans("more_configs"));
+    this->butt_configs.setToolTip(Trans("tip_more_configs"));
+    this->butt_configs.setGeometry(660, 516, 84, 24);
+    connect(&butt_configs, SIGNAL(clicked(bool)), this, SLOT(on_furconfigs()));
 
 
-    this->butt_keepSgf = new QCheckBox(Trans("keep_sgf"), this);
-    this->butt_keepSgf->setGeometry(60, 606, 600, 24);
-    this->butt_keepSgf->setChecked(config.keepSgf);
-    connect(butt_keepSgf, SIGNAL(toggled(bool)), this, SLOT(on_keepSgf()));
-    this->butt_sgfpath = new QPushButton(Trans("open_filepath"), this);
-    this->butt_sgfpath->setToolTip(Trans("tip_open_filepath"));
-    this->butt_sgfpath->setFocus();
-    this->butt_sgfpath->setGeometry(60, 630, 120, 24);
-    connect(butt_sgfpath, SIGNAL(clicked(bool)), this, SLOT(on_sgfpathbutt()));
-    butt_sgfpath->setEnabled(config.keepSgf);
-    this->show_sgfpath = new QLabel(this->config.sgf_path, this);
-    this->show_sgfpath->setGeometry(196, 630, 600, 24);
-    show_sgfpath->setEnabled(config.keepSgf);
-    this->show_sgfpath->setText(Trans("default_path") + config.sgf_path);
-    this->show_sgfpath->setToolTip(Trans("default_path") + config.sgf_path);
+    this->butt_keepSgf.setText(Trans("keep_sgf"));
+    this->butt_keepSgf.setGeometry(60, 606, 600, 24);
+    this->butt_keepSgf.setChecked(config.keepSgf);
+    connect(&butt_keepSgf, SIGNAL(toggled(bool)), this, SLOT(on_keepSgf()));
+    this->butt_sgfpath.setText(Trans("open_filepath"));
+    this->butt_sgfpath.setToolTip(Trans("tip_open_filepath"));
+    this->butt_sgfpath.setFocus();
+    this->butt_sgfpath.setGeometry(60, 630, 120, 24);
+    connect(&butt_sgfpath, SIGNAL(clicked(bool)), this, SLOT(on_sgfpathbutt()));
+    this->butt_sgfpath.setEnabled(config.keepSgf);
+    this->show_sgfpath.setText(Trans("default_path") + config.sgf_path);
+    this->show_sgfpath.setToolTip(Trans("default_path") + config.sgf_path);
+    this->show_sgfpath.setGeometry(196, 630, 600, 24);
+    this->show_sgfpath.setEnabled(config.keepSgf);
 
-    this->butt_netfile = new QPushButton(Trans("net_file"), this);
-    this->butt_netfile->setToolTip(Trans("tip_net_file"));
-    this->butt_netfile->setGeometry(60, 660, 120, 24);
-    connect(butt_netfile, SIGNAL(clicked(bool)), this, SLOT(on_netfilebutt()));
-    this->show_netfile = new QLabel(this->config.net_file, this);
-    this->show_netfile->setGeometry(196, 660, 600, 24);
-    this->show_netfile->setText(Trans("default_file") + config.net_filepath);
-    this->show_netfile->setToolTip(Trans("default_file") + config.net_filepath);
+    this->butt_netfile.setText(Trans("net_file"));
+    this->butt_netfile.setToolTip(Trans("tip_net_file"));
+    this->butt_netfile.setGeometry(60, 660, 120, 24);
+    connect(&butt_netfile, SIGNAL(clicked(bool)), this, SLOT(on_netfilebutt()));
+    this->show_netfile.setGeometry(196, 660, 600, 24);
+    this->show_netfile.setText(Trans("default_file") + config.net_filepath);
+    this->show_netfile.setToolTip(Trans("default_file") + config.net_filepath);
 
-    this->butt_translation = new QComboBox(this);
-    this->butt_translation->setGeometry(660, 33, 48, 24);
-    this->butt_translation->addItem(QIcon(":/images/chn.png"), "", LeelaGTPLocale::Cn);
-    this->butt_translation->addItem(QIcon(":/images/eng.png"), "", LeelaGTPLocale::En);
-    this->butt_translation->setToolTip(Trans("tip_translation"));
-    connect(butt_translation, SIGNAL(activated(int)), this, SLOT(on_translation()));
+    this->butt_translation.setGeometry(660, 33, 48, 24);
+    this->butt_translation.addItem(QIcon(":/images/chn.png"), "", LeelaGTPLocale::Cn);
+    this->butt_translation.addItem(QIcon(":/images/eng.png"), "", LeelaGTPLocale::En);
+    this->butt_translation.setToolTip(Trans("tip_translation"));
+    connect(&butt_translation, SIGNAL(activated(int)), this, SLOT(on_translation()));
 }
 
 LeelaGTP::~LeelaGTP() {
-    delete butt_keepSgf;
-    delete butt_sgfpath;
-    delete show_sgfpath;
-    delete butt_netfile;
-    delete show_netfile;
-    delete label_timeout;
-    delete butt_timeout;
-    delete label_gpugames;
-    delete butt_gpugames;
-    delete butt_configs;
-    delete label_maxgames;
-    delete butt_maxgames;
-    delete butt_run;
-    delete show_board;
-    delete show_stones;
     delete boss;
 }
 
 bool LeelaGTP::eventFilter(QObject *watched, QEvent *event) {
     if (event->type() == QEvent::Paint) {
-        if (watched == show_board)
+        if (watched == &show_board)
             drawing_board();
-        else if (watched == show_stones)
+        else if (watched == &show_stones)
             drawing_stones();
     }
     return QWidget::eventFilter(watched, event);
 }
 
 void LeelaGTP::on_keepSgf() {
-    if (butt_keepSgf->isChecked()) {
+    if (butt_keepSgf.isChecked()) {
         config.keepSgf = true;
     } else {
         config.keepSgf = false;
     }
-    butt_sgfpath->setEnabled(config.keepSgf);
-    show_sgfpath->setEnabled(config.keepSgf);
+    butt_sgfpath.setEnabled(config.keepSgf);
+    show_sgfpath.setEnabled(config.keepSgf);
 }
 
 void LeelaGTP::on_sgfpathbutt() {
     QString sgf_path = QFileDialog::getExistingDirectory(this, Trans("msg_sgf_save_path"), ".");
     if (!sgf_path.isEmpty()) {
         config.sgf_path = sgf_path;
-        this->show_sgfpath->setText(Trans("save_to") + config.sgf_path);
-        this->show_sgfpath->setToolTip(Trans("save_to") + config.sgf_path);
+        this->show_sgfpath.setText(Trans("save_to") + config.sgf_path);
+        this->show_sgfpath.setToolTip(Trans("save_to") + config.sgf_path);
     }
 }
 
@@ -188,8 +180,8 @@ void LeelaGTP::on_netfilebutt() {
         config.net_filepath = filepath;
         QFileInfo file(config.net_filepath);
         config.net_file = file.fileName();
-        show_netfile->setText(config.net_filepath);
-        show_netfile->setToolTip(config.net_filepath);
+        show_netfile.setText(config.net_filepath);
+        show_netfile.setToolTip(config.net_filepath);
     }
 }
 
@@ -204,7 +196,7 @@ void LeelaGTP::on_runbutt() {
     if (is_running) {
         // Now running
         _enable_all_elements(false);
-        butt_run->setText(Trans("stop"));
+        butt_run.setText(Trans("stop"));
         _run();
     } else {
         // Now exit
@@ -213,16 +205,16 @@ void LeelaGTP::on_runbutt() {
             boss->sendQuit();
         } else {
             _enable_all_elements(true);
-            butt_run->setText(Trans("run"));
+            butt_run.setText(Trans("run"));
         }
     }
 }
 
 void LeelaGTP::on_translation() {
-    if (this->butt_translation->currentIndex() == __leela_gtp_locale) {
+    if (this->butt_translation.currentIndex() == __leela_gtp_locale) {
         return;
     } else {
-        __leela_gtp_locale = this->butt_translation->currentIndex() == 0 ?
+        __leela_gtp_locale = this->butt_translation.currentIndex() == 0 ?
                     LeelaGTPLocale::Cn : LeelaGTPLocale::En;
         this->retranslate();
     }
@@ -271,7 +263,7 @@ int LeelaGTP::_run() {
 void LeelaGTP::on_bossexit() {
     is_running = false;
     _enable_all_elements(true);
-    butt_run->setText(Trans("run"));
+    butt_run.setText(Trans("run"));
 
     if (boss->terminate_leelaz())
         QMessageBox::information(this, Trans("msg_err_stop"),
@@ -281,7 +273,7 @@ void LeelaGTP::on_bossexit() {
 
     boss = nullptr;
     draw_mov.init();
-    show_stones->update();
+    show_stones.update();
 }
 
 void LeelaGTP::on_recvmove(int move) {
@@ -312,25 +304,24 @@ void LeelaGTP::on_recvmove(int move) {
     default:
         return;
     }
-    show_stones->update();
+    show_stones.update();
 }
 
 void LeelaGTP::_enable_all_elements(bool cmd) {
-    butt_timeout->setEnabled(cmd);
-    butt_gpugames->setEnabled(cmd);
-    butt_configs->setEnabled(cmd);
-    butt_maxgames->setEnabled(cmd);
-    butt_keepSgf->setEnabled(cmd);
-    butt_netfile->setEnabled(cmd);
+    butt_timeout.setEnabled(cmd);
+    butt_gpugames.setEnabled(cmd);
+    butt_configs.setEnabled(cmd);
+    butt_maxgames.setEnabled(cmd);
+    butt_keepSgf.setEnabled(cmd);
+    butt_netfile.setEnabled(cmd);
     if (config.keepSgf) {
-        butt_sgfpath->setEnabled(cmd);
-        show_sgfpath->setEnabled(cmd);
+        butt_sgfpath.setEnabled(cmd);
+        show_sgfpath.setEnabled(cmd);
     }
 }
 
 void LeelaGTP::drawing_board() {
-    assert(show_board != nullptr);
-    QPainter pain(show_board);
+    QPainter pain(&show_board);
     QRect target(win_gap / 2, win_gap / 2,
                  win_gap * 19, win_gap * 19);
     pain.drawImage(target, QImage(":/images/bord.png"));
@@ -356,8 +347,7 @@ void LeelaGTP::drawing_board() {
 }
 
 void LeelaGTP::drawing_stones() {
-    assert(show_stones != nullptr);
-    QPainter pain(show_stones);
+    QPainter pain(&show_stones);
     pain.setRenderHint(QPainter::Antialiasing, true); // 使得邊緣柔和
 
     int tmpi, tmpj;
@@ -393,38 +383,38 @@ void LeelaGTP::retranslate() {
     this->setWindowTitle(Trans("leelagtp_title"));
 
     if (is_running)
-        this->butt_run->setText(Trans("stop"));
+        this->butt_run.setText(Trans("stop"));
     else
-        this->butt_run->setText(Trans("run"));
-    this->butt_run->setToolTip(Trans("tip_run"));
+        this->butt_run.setText(Trans("run"));
+    this->butt_run.setToolTip(Trans("tip_run"));
 
-    this->label_timeout->setText(Trans("timeout"));
-    this->label_timeout->setToolTip(Trans("tip_timeout"));
-    this->butt_timeout->setSpecialValueText(Trans("unlimited"));
+    this->label_timeout.setText(Trans("timeout"));
+    this->label_timeout.setToolTip(Trans("tip_timeout"));
+    this->butt_timeout.setSpecialValueText(Trans("unlimited"));
 
-    this->label_maxgames->setText(Trans("max_games"));
-    this->label_maxgames->setToolTip(Trans("tip_max_games"));
-    this->butt_maxgames->setSpecialValueText(Trans("unlimited"));
+    this->label_maxgames.setText(Trans("max_games"));
+    this->label_maxgames.setToolTip(Trans("tip_max_games"));
+    this->butt_maxgames.setSpecialValueText(Trans("unlimited"));
 
-    this->label_gpugames->setText(Trans("max_gpugames"));
-    this->label_gpugames->setToolTip(Trans("tip_max_gpugames"));
+    this->label_gpugames.setText(Trans("max_gpugames"));
+    this->label_gpugames.setToolTip(Trans("tip_max_gpugames"));
 
-    this->butt_configs->setText(Trans("more_configs"));
-    this->butt_configs->setToolTip(Trans("tip_more_configs"));
+    this->butt_configs.setText(Trans("more_configs"));
+    this->butt_configs.setToolTip(Trans("tip_more_configs"));
 
-    this->butt_keepSgf->setText(Trans("keep_sgf"));
-    this->butt_sgfpath->setText(Trans("open_filepath"));
-    this->butt_sgfpath->setToolTip(Trans("tip_open_filepath"));
+    this->butt_keepSgf.setText(Trans("keep_sgf"));
+    this->butt_sgfpath.setText(Trans("open_filepath"));
+    this->butt_sgfpath.setToolTip(Trans("tip_open_filepath"));
 
     if (config.sgf_path == "./sgfs/") {
-        this->show_sgfpath->setText(Trans("default_path") + config.sgf_path);
-        this->show_sgfpath->setToolTip(Trans("default_path") + config.sgf_path);
+        this->show_sgfpath.setText(Trans("default_path") + config.sgf_path);
+        this->show_sgfpath.setToolTip(Trans("default_path") + config.sgf_path);
     }
-    this->butt_netfile->setText(Trans("net_file"));
-    this->butt_netfile->setToolTip(Trans("tip_net_file"));
+    this->butt_netfile.setText(Trans("net_file"));
+    this->butt_netfile.setToolTip(Trans("tip_net_file"));
     if (config.net_filepath == "./networks/weights.txt") {
-        this->show_netfile->setText(Trans("default_file") + config.net_filepath);
-        this->show_netfile->setToolTip(Trans("default_file") + config.net_filepath);
+        this->show_netfile.setText(Trans("default_file") + config.net_filepath);
+        this->show_netfile.setToolTip(Trans("default_file") + config.net_filepath);
     }
 
     config_dialog.retranslate();

@@ -129,51 +129,51 @@ private slots:
 private:
 
     // Play more randomly the first x moves. (-m =0)
-    QLabel *label_random;
-    QSpinBox *butt_random;
+    QLabel label_random;
+    QSpinBox butt_random;
 
     // Enable policy network randomization
-    QCheckBox *butt_enablenoise;
+    QCheckBox butt_enablenoise;
 
     // Set loop number of visits (-v [3200])
-    QLabel *label_loopvisits;
-    QSpinBox *butt_loopvisits;
+    QLabel label_loopvisits;
+    QSpinBox butt_loopvisits;
 
     // Set resign winrate (-r 1)
-    QLabel *label_resignpct, *show_resignpct;
-    QSpinBox *butt_resignpct;
+    QLabel label_resignpct, show_resignpct;
+    QSpinBox butt_resignpct;
 
     // Set extral leelaz parameters
-    QLabel *label_exlzparam;
-    QLineEdit *edit_exlzparam;
+    QLabel label_exlzparam;
+    QLineEdit edit_exlzparam;
 
     // Job type chozen
-    QLabel *label_jobtype;
-    QComboBox *butt_jobtype;
+    QLabel label_jobtype;
+    QComboBox butt_jobtype;
 
     // Matches
-    QPushButton *butt_compnetfile;
-    QLabel *show_compnetfile;
+    QPushButton butt_compnetfile;
+    QLabel show_compnetfile;
 
     // Dump supervised
-    QPushButton *butt_dumpsgffile;
-    QLabel *show_dumpsgffile;
-    QPushButton *butt_dumpdatafile;
-    QLabel *show_dumpdatafile;
+    QPushButton butt_dumpsgffile;
+    QLabel show_dumpsgffile;
+    QPushButton butt_dumpdatafile;
+    QLabel show_dumpdatafile;
 
     // load training data from directory
-    QPushButton *butt_trainingdatapath;
-    QLabel *show_trainingdatapath;
+    QPushButton butt_trainingdatapath;
+    QLabel show_trainingdatapath;
 
     // Don's use heuristic for smarter pass (-d)
-    QCheckBox *butt_heuristic;
+    QCheckBox butt_heuristic;
 
     // Load training data
-    QCheckBox *butt_loaddata;
+    QCheckBox butt_loaddata;
 
     // OK, Cancel
-    QPushButton *butt_okay;
-    QPushButton *butt_cancel;
+    QPushButton butt_okay;
+    QPushButton butt_cancel;
 
 
     struct GTPConfigElements config;

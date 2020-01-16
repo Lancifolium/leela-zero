@@ -71,39 +71,40 @@ private:
     GTPConfig config_dialog;
 
     // Save SGF files after each self-play game.
-    QCheckBox *butt_keepSgf;
-    QPushButton *butt_sgfpath;
-    QLabel *show_sgfpath;
+    QCheckBox butt_keepSgf;
+    QPushButton butt_sgfpath;
+    QLabel show_sgfpath;
 
     // Set self defined network
-    QPushButton *butt_netfile;
-    QLabel *show_netfile;
+    QPushButton butt_netfile;
+    QLabel show_netfile;
 
     // Save running games after the timeout (in minutes) is passed and then exit.
-    QLabel *label_timeout;
-    QSpinBox *butt_timeout;
-
-    // Play 'gpu_names' games on one GPU at the same time.
-    QLabel *label_gpugames;
-    QSpinBox *butt_gpugames;
-
-    // Further configurations
-    QPushButton *butt_configs;
+    QLabel label_timeout;
+    QSpinBox butt_timeout;
 
     // Exit after the given number of games is completed.
-    QLabel *label_maxgames;
-    QSpinBox *butt_maxgames;
+    QLabel label_maxgames;
+    QSpinBox butt_maxgames;
+
+    // Play 'gpu_names' games on one GPU at the same time.
+    QLabel label_gpugames;
+    QSpinBox butt_gpugames;
+
+    // Further configurations
+    QPushButton butt_configs;
+
 
     // Run
-    QPushButton *butt_run;
+    QPushButton butt_run;
 
 
     // Show board and stones
-    QLabel *show_board;
-    QLabel *show_stones;
+    QLabel show_board;
+    QLabel show_stones;
 
     // Job type chozen
-    QComboBox *butt_translation;
+    QComboBox butt_translation;
 
 
     GTPConfigElements config;
