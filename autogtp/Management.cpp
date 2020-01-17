@@ -632,7 +632,10 @@ Order Management::getWork(bool tuning) {
         t["debug"] = "false";
         t["network"] = m_config->net_file; // useless
         t["use_local_network"] = "true";
-        Order o(m_config->job_type, t);
+        int job_type = Order::Production;
+        if (m_config->job_type == GTPConfigElements::JobType::LocalValidation)
+            job_type = Order::Validation;
+        Order o(job_type, t);
         return o;
     }
 

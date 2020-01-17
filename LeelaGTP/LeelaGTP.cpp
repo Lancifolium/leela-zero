@@ -34,6 +34,7 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
         config_dialog(this, &config),
         butt_keepSgf(this),
         butt_sgfpath(this),
+        show_sgfpath(this),
         butt_netfile(this),
         show_netfile(this),
         label_timeout(this),
@@ -409,6 +410,9 @@ void LeelaGTP::retranslate() {
     if (config.sgf_path == "./sgfs/") {
         this->show_sgfpath.setText(Trans("default_path") + config.sgf_path);
         this->show_sgfpath.setToolTip(Trans("default_path") + config.sgf_path);
+    } else {
+        this->show_sgfpath.setText(Trans("save_to") + config.sgf_path);
+        this->show_sgfpath.setToolTip(Trans("save_to") + config.sgf_path);
     }
     this->butt_netfile.setText(Trans("net_file"));
     this->butt_netfile.setToolTip(Trans("tip_net_file"));
