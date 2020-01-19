@@ -136,7 +136,7 @@ void Management::giveAssignments() {
     /*
     if (m_config->enable_noise)
         tuneCmdLine.append("-n ");
-    if (!m_config->heuristic)
+    if (!m_config->dumbpass)
         tuneCmdLine.append("--dumbpass ");
     if (m_config->random_num > 0)
         tuneCmdLine.append("-m " + QString::number(m_config->random_num) + " ");
@@ -611,19 +611,27 @@ Order Management::getWork(bool tuning) {
     if (m_config->job_type != GTPConfigElements::JobType::OnlineJob) {
         QMap<QString, QString> t;
         QString options;
-        if (m_config->enable_noise)
-            options.append(" -n");
-        if (m_config->random_num > 0) {
+        /*if (m_config->randomcnt > 0) {
             qsrand(QTime(0, 0, 0).secsTo(QTime::currentTime()));
             options.append(" -s " + QString::number(qrand()));
-        }
-        if (!m_config->heuristic)
+        }*/
+        if (m_config->threads_num >= 0)
+            options.append(" -t " + QString::number(m_config->threads_num));
+        if (m_config->playouts >= 0)
+            options.append(" -p " + QString::number(m_config->playouts));
+        if (m_config->batch_size >= 0)
+            options.append(" -b " + QString::number(m_config->batch_size));
+        if (m_config->randomcnt > 0)
+            options.append(" -m " + QString::number(m_config->randomcnt));
+        if (m_config->loop_visits > 0)
+            options.append(" -v " + QString::number(m_config->loop_visits));
+        if (m_config->resignation_percent > 0)
+            options.append(" -r " + QString::number(m_config->resignation_percent));
+        if (m_config->enable_noise)
+            options.append(" -n");
+        if (!m_config->dumbpass)
             options.append(" --dumbpass");
-        if (m_config->random_num > 0)
-            options.append(" -m " + QString::number(m_config->random_num));
-        options.append(" -v " + QString::number(m_config->loop_visits));
-        options.append(" -r " + QString::number(m_config->resignation_percent));
-        options.append(" -t 1 --noponder");
+        options.append(" --noponder");
         QTextStream(stdout) << "options: " << options << "\n";
         t["leelazVer"] = "0.17";
         t["rndSeed"] = "";
@@ -633,8 +641,10 @@ Order Management::getWork(bool tuning) {
         t["network"] = m_config->net_file; // useless
         t["use_local_network"] = "true";
         int job_type = Order::Production;
-        if (m_config->job_type == GTPConfigElements::JobType::LocalValidation)
+        if (m_config->job_type == GTPConfigElements::JobType::LocalValidation) {
             job_type = Order::Validation;
+            t["white_options"] = options;
+        }
         Order o(job_type, t);
         return o;
     }

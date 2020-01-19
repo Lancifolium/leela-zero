@@ -27,7 +27,12 @@
 
 GTPConfigElements::GTPConfigElements() :
         job_type(JobType::LocalProduction),
+        // LeelaGTP main configurations:
+        run_timeout(0),
+        gpu_games(1),
+        run_maxgames(0),
         keepSgf(true),
+        // Paths:
         sgf_path("./sgfs/"),
         net_filepath("./networks/weights.txt"),
         net_file("weights.txt"),
@@ -35,26 +40,38 @@ GTPConfigElements::GTPConfigElements() :
         net_component_file("component_weights.txt"),
         dump_sgf_file("./sgfs/tmp.sgf"),
         dump_data_file("./train.txt"),
-        extral_lzparam(""),
         training_data_path("./data/"),
+        // GTPConfig configurations: (Add GTP commands...)
+        extral_lzparam(""),
         load_training_data(true),
-        run_timeout(0),
-        run_maxgames(0),
-        random_num(0),
-        enable_noise(0),
+        // Options:
+        threads_num(0),
+        playouts(0),
+        batch_size(0),
+        randomcnt(0),
         loop_visits(3300),
         resignation_percent(1),
-        heuristic(false),
-        gpu_games(1),
+        enable_noise(0),
+        dumbpass(false),
+        // leelaz path
         leelaz_path("./leelaz") {}
 
 void GTPConfigElements::copyto(GTPConfigElements *c) {
     c->job_type = this->job_type;
 
+
+    // LeelaGTP main configurations:
+    //c->run_timeout = this->run_timeout;
+    //c->gpu_games = this->gpu_games;
+    //c->run_maxgames = this->run_maxgames;
+
     //c->keepSgf = this->keepSgf;
+
+
+    // Paths:
     //c->sgf_path = this->sgf_path;
 
-    //c->net_path = this->net_path;
+    //c->net_filepath = this->net_filepath;
     //c->net_file = this->net_file;
     c->net_component_filepath = this->net_component_filepath;
     c->net_component_file = this->net_component_file;
@@ -62,30 +79,39 @@ void GTPConfigElements::copyto(GTPConfigElements *c) {
     c->dump_sgf_file = this->dump_sgf_file;
     c->dump_data_file = this->dump_data_file;
 
+    c->training_data_path = this->training_data_path;
+
+
+    // GTPConfig configurations: (Add GTP commands...)
     c->extral_lzparam = this->extral_lzparam;
 
-    c->training_data_path = this->training_data_path;
     c->load_training_data = this->load_training_data;
-    //c->load_kept_sgfs = this->load_kept_sgfs;
 
-    //c->run_timeout = this->run_timeout;
-    //c->run_maxgames = this->run_maxgames;
 
-    c->random_num = this->random_num;
-
-    c->enable_noise = this->enable_noise;
-
+    // Options:
+    c->threads_num = this->threads_num;
+    c->playouts = this->playouts;
+    c->batch_size = this->batch_size;
+    c->randomcnt = this->randomcnt;
     c->loop_visits = this->loop_visits;
     c->resignation_percent = this->resignation_percent;
+    c->enable_noise = this->enable_noise;
+    c->dumbpass = this->dumbpass;
 
-    c->heuristic = this->heuristic;
-    //c->gpu_games = this->gpu_games;
+
+    // leelaz path
     //c->leelaz_path = this->leelaz_path;
 }
 
 
 GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
         QDialog (parent),
+        label_threads(this),
+        butt_threads(this),
+        label_playouts(this),
+        butt_playouts(this),
+        label_batchsize(this),
+        butt_batchsize(this),
         label_random(this),
         butt_random(this),
         butt_enablenoise(this),
@@ -106,7 +132,7 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
         show_dumpdatafile(this),
         butt_trainingdatapath(this),
         show_trainingdatapath(this),
-        butt_heuristic(this),
+        butt_dumbpass(this),
         butt_loaddata(this),
         butt_okay(this),
         butt_cancel(this),
@@ -116,16 +142,45 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
     this->setWindowTitle(Trans("gtpconfig_title"));
     this->setFixedSize(600, 600);
 
+    this->label_threads.setText(Trans("threads"));
+    this->label_threads.setToolTip(Trans("tip_threads"));
+    this->label_threads.setGeometry(60, 6, 150, 24);
+    this->butt_threads.setGeometry(60, 30, 84, 24);
+    this->butt_threads.setRange(0, 800);
+    this->butt_threads.setValue(config.threads_num);
+    this->butt_threads.setSingleStep(10);
+    connect(&butt_threads, QOverload<int>::of(&QSpinBox::valueChanged),
+            [=](int val) { config.threads_num = val; });
+
+    this->label_playouts.setText(Trans("playouts"));
+    this->label_playouts.setToolTip(Trans("tip_playouts"));
+    this->label_playouts.setGeometry(240, 6, 150, 24);
+    this->butt_playouts.setGeometry(240, 30, 84, 24);
+    this->butt_playouts.setRange(0, 800);
+    this->butt_playouts.setValue(config.playouts);
+    this->butt_playouts.setSingleStep(10);
+    connect(&butt_playouts, QOverload<int>::of(&QSpinBox::valueChanged),
+            [=](int val) { config.playouts = val; });
+
+    this->label_batchsize.setText(Trans("batchsize"));
+    this->label_batchsize.setToolTip(Trans("tip_batchsize"));
+    this->label_batchsize.setGeometry(420, 6, 150, 24);
+    this->butt_batchsize.setGeometry(420, 30, 84, 24);
+    this->butt_batchsize.setRange(0, 800);
+    this->butt_batchsize.setValue(config.batch_size);
+    this->butt_batchsize.setSingleStep(10);
+    connect(&butt_batchsize, QOverload<int>::of(&QSpinBox::valueChanged),
+            [=](int val) { config.batch_size = val; });
 
     this->label_random.setText(Trans("random"));
     this->label_random.setToolTip(Trans("tip_random"));
     this->label_random.setGeometry(60, 66, 150, 24);
     this->butt_random.setGeometry(60, 90, 84, 24);
     this->butt_random.setRange(0, 800);
-    this->butt_random.setValue(config.random_num);
+    this->butt_random.setValue(config.randomcnt);
     this->butt_random.setSingleStep(10);
     connect(&butt_random, QOverload<int>::of(&QSpinBox::valueChanged),
-            [=](int val) { config.random_num = val; });
+            [=](int val) { config.randomcnt = val; });
 
     this->label_loopvisits.setText(Trans("loop_visits"));
     this->label_loopvisits.setToolTip(Trans("tip_loop_visits"));
@@ -153,9 +208,9 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
     this->butt_enablenoise.setGeometry(60, 120, 150, 24);
     connect(&butt_enablenoise, SIGNAL(toggled(bool)), this, SLOT(on_noise()));
 
-    this->butt_heuristic.setText(Trans("heuristic"));
-    this->butt_heuristic.setGeometry(60, 150, 150, 24);
-    connect(&butt_heuristic, SIGNAL(toggled(bool)), this, SLOT(on_heuristic()));
+    this->butt_dumbpass.setText(Trans("dumbpass"));
+    this->butt_dumbpass.setGeometry(60, 150, 150, 24);
+    connect(&butt_dumbpass, SIGNAL(toggled(bool)), this, SLOT(on_dumbpass()));
 
     this->butt_loaddata.setText(Trans("load_data"));
     this->butt_loaddata.setGeometry(60, 180, 360, 24);
@@ -237,11 +292,11 @@ GTPConfig::~GTPConfig() {
 }
 
 void GTPConfig::drawwindow() {
-    this->butt_random.setValue(config.random_num);
+    this->butt_random.setValue(config.randomcnt);
     this->butt_loopvisits.setValue(config.loop_visits);
     this->butt_resignpct.setValue(config.resignation_percent);
     this->butt_enablenoise.setChecked(config.enable_noise);
-    this->butt_heuristic.setChecked(config.heuristic);
+    this->butt_dumbpass.setChecked(config.dumbpass);
     this->butt_loaddata.setChecked(config.load_training_data);
     if (config.training_data_path == "./data/") {
         this->show_trainingdatapath.setText(
@@ -296,6 +351,12 @@ void GTPConfig::copyfrom(GTPConfigElements *m_config) {
 
 void GTPConfig::retranslate() {
     this->setWindowTitle(Trans("gtpconfig_title"));
+    this->label_threads.setText(Trans("threads"));
+    this->label_threads.setToolTip(Trans("tip_threads"));
+    this->label_playouts.setText(Trans("playouts"));
+    this->label_playouts.setToolTip(Trans("tip_playouts"));
+    this->label_batchsize.setText(Trans("batchsize"));
+    this->label_batchsize.setToolTip(Trans("tip_batchsize"));
     this->label_random.setText(Trans("random"));
     this->label_random.setToolTip(Trans("tip_random"));
     this->label_loopvisits.setText(Trans("loop_visits"));
@@ -303,7 +364,7 @@ void GTPConfig::retranslate() {
     this->label_resignpct.setText(Trans("resign"));
     this->label_resignpct.setToolTip(Trans("tip_resign"));
     this->butt_enablenoise.setText(Trans("noise"));
-    this->butt_heuristic.setText(Trans("heuristic"));
+    this->butt_dumbpass.setText(Trans("dumbpass"));
 
     this->butt_loaddata.setText(Trans("load_data"));
     this->butt_trainingdatapath.setText(Trans("open_train_data_path"));
@@ -455,11 +516,11 @@ void GTPConfig::on_loadtrainingdata() {
 }
 
 
-void GTPConfig::on_heuristic() {
-    if (this->butt_heuristic.isChecked()) {
-        config.heuristic = true;
+void GTPConfig::on_dumbpass() {
+    if (this->butt_dumbpass.isChecked()) {
+        config.dumbpass = true;
     } else {
-        config.heuristic = false;
+        config.dumbpass = false;
     }
 }
 

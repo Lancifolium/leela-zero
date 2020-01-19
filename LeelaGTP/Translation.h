@@ -63,7 +63,25 @@ static QHash<QString, TranslateValue> __trans = {
          {"选择语言/Choose Translation", "选择语言/Choose Translation"}},
 
         // GTPConfig
-        {"gtpconfig_title", {"里拉GTP详细设置", "Leela GTP further configurations"}},
+        {"gtpconfig_title", {"里拉GTP详细设置",
+                             "Leela GTP further configurations"}},
+
+        {"threads", {"线程数", "Number of threads"}},
+        {"tip_threads",
+         {"使用线程数，0表示让leela-zero自动选择",
+          "Number of threads to use. Select 0 to let leela-zero pick a "
+          "reasonable default."}},
+
+        {"playouts", {"限制手数", "Limit playouts:"}},
+        {"tip_playouts",
+         {"限制落子手数削弱引擎，需要--noponder参数配合",
+          "Weaken engine by limiting the number of playouts. Requires "
+          "--noponder."}},
+
+        {"batchsize", {"最大批量", "Max batch size:"}},
+        {"tip_batchsize",
+         {"最大批量大小，0表示让leela-zero自动选择",
+          "Max batch size.  Select 0 to let leela-zero pick a reasonable default."}},
 
         {"random", {"前几步更随机：", "Randomly first steps:"}},
         {"tip_random", {"前几步更随机", " Play more randomly the first x moves."}},
@@ -77,7 +95,7 @@ static QHash<QString, TranslateValue> __trans = {
                         "Resign if winrate is lover than given rate."}},
 
         {"noise", {"是否允许策略网络随机", "Enable policy network randomization"}},
-        {"heuristic", {"是否使用启发式智能弃权", "Enable heuristic resign"}},
+        {"dumbpass", {"是否使用启发式智能弃权", "Enable dumbpass resign"}},
         {"load_data", {"是否加载保存数据文件", "Load training data"}},
         {"open_train_data_path", {"打开训练文件目录", "Training Data"}},
         {"tip_open_train_data_path",

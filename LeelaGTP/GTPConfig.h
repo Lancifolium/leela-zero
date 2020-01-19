@@ -44,6 +44,15 @@ struct GTPConfigElements {
     // Job type
     JobType job_type;
 
+    // Save running games after the timeout (in minutes) is passed and then exit.
+    int run_timeout;
+
+    // Play 'gpu_names' games on one GPU at the same time.
+    int gpu_games;
+
+    // Exit after the given number of games is completed.
+    int run_maxgames;
+
     // Keep Sgf file
     bool keepSgf;
     QString sgf_path;
@@ -58,38 +67,39 @@ struct GTPConfigElements {
     QString dump_sgf_file;
     QString dump_data_file;
 
-    QString extral_lzparam;
-
     // load training data from directory
     QString training_data_path;
 
+    QString extral_lzparam;
+
     // load training data or kept sgf files
     bool load_training_data;
-    //bool load_kept_sgfs;
 
-    // Save running games after the timeout (in minutes) is passed and then exit.
-    int run_timeout;
+    // Number of threads to use. Select 0 to let leela-zero pick a reasonable
+    // default.
+    int threads_num;
 
-    // Exit after the given number of games is completed.
-    int run_maxgames;
+    // Weaken engine by limiting the number of playouts. Requires --noponder.
+    int playouts;
+
+    // Max batch size. Select 0 to let leela-zero pick a reasonable default.
+    int batch_size;
 
     // Play more randomly the first x moves (-m =0).
-    int random_num;
+    int randomcnt;
+
+    // Weaken engine by limiting the number of visits (-v [3200]).
+    int loop_visits;
+
+    // Resign when winrate is less than x% (-r).
+    // -1 uses 10% but scales for handicap.
+    int resignation_percent;
 
     // Enable policy network randomization (-n).
     bool enable_noise;
 
-    // Set loop number of visits (-v [3200])
-    int loop_visits;
-
-    // Resign when winrate is less than x%. -1 uses 10% but scales for handicap.
-    int resignation_percent;
-
-    // Don's use heuristic for smarter pass (-d)
-    bool heuristic;
-
-    // Play 'gpu_names' games on one GPU at the same time.
-    int gpu_games;
+    // Don't use heuristics for smarter passing (-d).
+    bool dumbpass;
 
     // Specify 'leelaz' path
     QString leelaz_path;
@@ -120,13 +130,25 @@ private slots:
     void on_savedumpdatafile();
     void on_trainingdatapath();
     void on_loadtrainingdata();
-    void on_heuristic();
+    void on_dumbpass();
     void on_exlzparam();
 
     void on_okay();
     void on_cancel();
 
 private:
+
+    // Number of threads to use. (-t =0)
+    QLabel label_threads;
+    QSpinBox butt_threads;
+
+    // Weaken engine by limiting the number of playouts.
+    QLabel label_playouts;
+    QSpinBox butt_playouts;
+
+    // Max batch size. (--batchsize =0)
+    QLabel label_batchsize;
+    QSpinBox butt_batchsize;
 
     // Play more randomly the first x moves. (-m =0)
     QLabel label_random;
@@ -165,8 +187,8 @@ private:
     QPushButton butt_trainingdatapath;
     QLabel show_trainingdatapath;
 
-    // Don's use heuristic for smarter pass (-d)
-    QCheckBox butt_heuristic;
+    // Don't use heuristics for smarter passing (-d).
+    QCheckBox butt_dumbpass;
 
     // Load training data
     QCheckBox butt_loaddata;
