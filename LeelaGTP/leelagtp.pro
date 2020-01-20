@@ -20,26 +20,26 @@ TEMPLATE = app
 DEFINES += LEELA_GTP
 DEFINES += ANCIENT_CHINESE_RULE_ENABLED
 
-INCLUDEPATH += ../AutoGTP/
+INCLUDEPATH += ../autogtp/
 
 SOURCES += main.cpp \
-    ../AutoGTP/Game.cpp \
-    ../AutoGTP/Worker.cpp \
-    ../AutoGTP/Order.cpp \
-    ../AutoGTP/Job.cpp \
-    ../AutoGTP/Management.cpp \
+    ../autogtp/Game.cpp \
+    ../autogtp/Worker.cpp \
+    ../autogtp/Order.cpp \
+    ../autogtp/Job.cpp \
+    ../autogtp/Management.cpp \
     LeelaGTP.cpp \
     MovLancifolium.cpp \
     GTPConfig.cpp \
     Translation.cpp
 
 HEADERS += \
-    ../AutoGTP/Game.h \
-    ../AutoGTP/Worker.h \
-    ../AutoGTP/Job.h \
-    ../AutoGTP/Order.h \
-    ../AutoGTP/Result.h \
-    ../AutoGTP/Management.h \
+    ../autogtp/Game.h \
+    ../autogtp/Worker.h \
+    ../autogtp/Job.h \
+    ../autogtp/Order.h \
+    ../autogtp/Result.h \
+    ../autogtp/Management.h \
     LeelaGTP.h \
     MovLancifolium.h \
     GTPConfig.h \

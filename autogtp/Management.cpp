@@ -617,7 +617,7 @@ Order Management::getWork(bool tuning) {
         }*/
         if (m_config->threads_num >= 0)
             options.append(" -t " + QString::number(m_config->threads_num));
-        if (m_config->playouts >= 0)
+        if (m_config->playouts >= 100)
             options.append(" -p " + QString::number(m_config->playouts));
         if (m_config->batch_size >= 0)
             options.append(" -b " + QString::number(m_config->batch_size));
