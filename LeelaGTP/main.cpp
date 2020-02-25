@@ -22,7 +22,13 @@
 
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
+
+#ifdef WIN32
     LeelaGTP w(&a);
+#else
+    LeelaGTP w;
+#endif
+
     w.show();
     return a.exec();
 }

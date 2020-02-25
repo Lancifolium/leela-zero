@@ -1,5 +1,5 @@
 QT_REQ_MAJOR_VERSION = 5
-QT_REQ_MINOR_VERSION = 3
+QT_REQ_MINOR_VERSION = 11
 QT_REQ_VERSION = "$$QT_REQ_MAJOR_VERSION"."$$QT_REQ_MINOR_VERSION"
 
 lessThan(QT_MAJOR_VERSION, $$QT_REQ_MAJOR_VERSION) {
@@ -13,7 +13,12 @@ equals(QT_MAJOR_VERSION, $$QT_REQ_MAJOR_VERSION):lessThan(QT_MINOR_VERSION, $$QT
 QT       += core gui widgets
 TARGET   = leelagtp
 CONFIG   += c++14
-RC_FILE  += leelagtp.rc
+
+#QMAKE_CFLAGS_RELEASE += -g
+#QMAKE_CXXFLAGS_RELEASE += -g
+# Disable optimization
+#QMAKE_CFLAGS_RELEASE -= -O2
+#QMAKE_CXXFLAGS_RELEASE -= -O2
 
 TEMPLATE = app
 
@@ -29,8 +34,8 @@ SOURCES += main.cpp \
     ../autogtp/Job.cpp \
     ../autogtp/Management.cpp \
     LeelaGTP.cpp \
-    MovLancifolium.cpp \
     GTPConfig.cpp \
+    ShowBoard.cpp \
     Translation.cpp
 
 HEADERS += \
@@ -41,12 +46,9 @@ HEADERS += \
     ../autogtp/Result.h \
     ../autogtp/Management.h \
     LeelaGTP.h \
-    MovLancifolium.h \
     GTPConfig.h \
+    ShowBoard.h \
     Translation.h
-
-DISTFILES += \
-    leelagtp.rc
 
 RESOURCES += \
     leelagtp.qrc

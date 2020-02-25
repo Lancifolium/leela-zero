@@ -25,6 +25,7 @@
 #include <QApplication>
 #include <QDialog>
 #include <QFileDialog>
+#include <QMenuBar>
 #include <QMessageBox>
 
 #include <QPushButton>
@@ -32,42 +33,83 @@
 #include <QSpinBox>
 #include <QLineEdit>
 #include <QTextBrowser>
+#include <QToolBar>
 #include <QLabel>
 #include <QResizeEvent>
+#include <QVBoxLayout>
+#include <QGridLayout>
+#include <QScrollArea>
+#include <QSplitter>
+#include <QStackedLayout>
 
 #include <QString>
 
 #include "Management.h"
-#include "MovLancifolium.h"
 #include "GTPConfig.h"
+#include "ShowBoard.h"
 
 class LeelaGTP : public QMainWindow {
     Q_OBJECT
 public:
-    LeelaGTP(QApplication *app, QWidget *parent = nullptr);
+    LeelaGTP(
+#ifdef WIN32
+            QApplication *app,
+#endif
+            QWidget *parent = nullptr);
     ~LeelaGTP();
     bool eventFilter(QObject *watched, QEvent *event) override;
+
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     void _enable_all_elements(bool cmd);
     int _run();
 
-    void drawing_board();
-    void drawing_stones();
     void retranslate();
 
 private slots:
     void on_keepSgf();
     void on_sgfpathbutt();
     void on_netfilebutt();
-    void on_furconfigs();
+    void on_createtask();
     void on_runbutt();
     void on_bossexit();
     void on_recvmove(int);
     void on_translation();
+    void on_exit();
+    void on_about();
 
 private:
+#ifdef WIN32
     QApplication *app;
+#endif
+
+    // Menu/Tool bar settings.
+    QToolBar *toolbar;
+
+    // File
+    QMenu *menu_file;
+    QAction act_newfile;
+    QAction act_openfile;
+    QAction act_savefile;
+    QAction act_exit;
+
+    // Task
+    QMenu *menu_task;
+    QAction act_newtask;
+    QAction act_opentask;
+    QAction act_savetask;
+
+    // Help
+    QMenu *menu_help;
+    QAction act_about;
+
+
+    // Main window.
+    QSplitter *main_splitter;
+    //QSplitter board_splitter;
+
     GTPConfig config_dialog;
 
     // Save SGF files after each self-play game.
@@ -92,7 +134,7 @@ private:
     QSpinBox butt_gpugames;
 
     // Further configurations
-    QPushButton butt_configs;
+    QPushButton butt_createtask;
 
 
     // Run
@@ -100,8 +142,10 @@ private:
 
 
     // Show board and stones
-    QLabel show_board;
-    QLabel show_stones;
+    ShowBoard show_board;
+
+    // Show infomations here.
+    QScrollArea view_panel;
 
     // Job type chozen
     QComboBox butt_translation;
@@ -111,14 +155,6 @@ private:
 
     bool is_running;
     Management *boss;
-
-    MovLancifolium draw_mov;
-
-    /* 繪圖 */
-    int win_size; /* 棋盤尺寸 */
-    int win_gap; /* = win_size / 20 */
-    int win_xlb; /* 棋盤左上角的橫坐標 */
-    int win_ylb; /* 棋盤左上角的縱坐標 */
 };
 
 #endif // LEELAGTP_H

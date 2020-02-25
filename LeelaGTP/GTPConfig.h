@@ -23,12 +23,17 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDialog>
+#include <QDialogButtonBox>
 #include <QFileDialog>
+#include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListView>
 #include <QPushButton>
 #include <QRadioButton>
 #include <QSpinBox>
+#include <QStandardItemModel>
+#include <QStackedLayout>
 #include <QWidget>
 
 class LeelaGTP;
@@ -121,10 +126,11 @@ public:
 private:
     friend class LeelaGTP;
     void retranslate();
+    void set_common_elements(QGridLayout* l);
 
 private slots:
     void on_noise();
-    void on_jobtype();
+    void on_jobtype_clicked(QModelIndex index);
     void on_compnetfile();
     void on_dumpsgffile();
     void on_savedumpdatafile();
@@ -170,8 +176,8 @@ private:
     QLineEdit edit_exlzparam;
 
     // Job type chozen
-    QLabel label_jobtype;
-    QComboBox butt_jobtype;
+    QListView view_jobtype;
+    QStandardItemModel model_jobtype;
 
     // Matches
     QPushButton butt_compnetfile;
@@ -194,9 +200,23 @@ private:
     QCheckBox butt_loaddata;
 
     // OK, Cancel
-    QPushButton butt_okay;
-    QPushButton butt_cancel;
+    QDialogButtonBox butt_okays;
 
+    //
+    QWidget *w;
+
+    QGridLayout *gl_window;
+    QStackedLayout *sl_jobtypes;
+    QGridLayout *gl_commons;
+
+    QWidget *w_local;
+    QGridLayout *gl_local;
+    QWidget *w_localmatch;
+    QGridLayout *gl_localmatch;
+    QWidget *w_online;
+    QGridLayout *gl_online;
+    QWidget *w_convert;
+    QGridLayout *gl_convert;
 
     struct GTPConfigElements config;
     struct GTPConfigElements *main_config;

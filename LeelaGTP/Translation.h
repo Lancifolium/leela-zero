@@ -1,3 +1,22 @@
+/*
+    This file is part of Leela GTP.
+    Copyright (C) 2019 Fierralin
+    Copyright (C) 2017-2018 Marco Calignano
+
+    Leela GTP and Leela Zero are free softwares: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    Leela GTP is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Leela GTP.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef TRANSLATION_H
 #define TRANSLATION_H
 
@@ -47,9 +66,19 @@ static QHash<QString, TranslateValue> __trans = {
          {"單GPU上同時下棋局數",
           "Play given number of games on one device (GPU/CPU) at the same time."}},
 
-
-        {"more_configs", {"更多设置...", "More Configs"}},
-        {"tip_more_configs", {"更多设置...", "More Configs"}},
+        // Tool bar and menu bar
+        {"file", {"文件", "File"}},
+        {"new_file", {"新建文件", "New file"}},
+        {"open_file", {"打开文件", "Open File"}},
+        {"save_file", {"保存文件", "Save File"}},
+        {"exit", {"退出", "Exit"}},
+        {"task", {"任务", "Task"}},
+        {"new_task", {"新建任务", "New Task"}},
+        {"tip_new_task", {"新建任务", "New Task"}},
+        {"open_task", {"打开任务", "Open Task"}},
+        {"save_task", {"保存任务", "Save Task"}},
+        {"help", {"帮助", "Help"}},
+        {"about", {"关于", "About"}},
 
         {"keep_sgf",
          {"是否保存棋譜文件",
@@ -66,25 +95,25 @@ static QHash<QString, TranslateValue> __trans = {
         {"gtpconfig_title", {"里拉GTP详细设置",
                              "Leela GTP further configurations"}},
 
-        {"threads", {"线程数", "Number of threads"}},
+        {"threads", {"线程数:", "Number of threads:"}},
         {"tip_threads",
          {"使用线程数，0表示让leela-zero自动选择",
           "Number of threads to use. Select 0 to let leela-zero pick a "
           "reasonable default."}},
 
-        {"playouts", {"限制手数", "Limit playouts:"}},
+        {"playouts", {"限制手数:", "Limit playouts:"}},
         {"tip_playouts",
          {"限制落子手数削弱引擎，需要--noponder参数配合",
           "Weaken engine by limiting the number of playouts. Requires "
           "--noponder."}},
 
-        {"batchsize", {"最大批量", "Max batch size:"}},
+        {"batchsize", {"最大批量:", "Max batch size:"}},
         {"tip_batchsize",
          {"最大批量大小，0表示让leela-zero自动选择",
           "Max batch size.  Select 0 to let leela-zero pick a reasonable default."}},
 
         {"random", {"前几步更随机：", "Randomly first steps:"}},
-        {"tip_random", {"前几步更随机", " Play more randomly the first x moves."}},
+        {"tip_random", {"前几步更随机:", " Play more randomly the first x moves."}},
         {"loop_visits", {"设置循环遍历步数:", "Limit loop visits:"}},
         {"tip_loop_visits",
          {"设置循环遍历步数",
@@ -111,7 +140,7 @@ static QHash<QString, TranslateValue> __trans = {
           "Choose job type:\n  Local  Production job\n  Local Validation job"
           "\n  Online job (not support)"
           "\n  Dump Supervised: dump SGF to training data"}},
-        {"type_local_production", {"线下自战", "Online Validation"}},
+        {"type_local_production", {"线下自战", "Local Production"}},
         {"type_local_validation", {"线下对抗", "Local Validation"}},
         {"type_online", {"线上训练", "Online Job"}},
         {"type_dump_supervised", {"训练转换", "Dump Supervised"}},
@@ -141,13 +170,17 @@ static QHash<QString, TranslateValue> __trans = {
         {"msg_err_stop_details",
          {"没有找到leelaz执行文件或权重文件\n请您确认设置是否正确",
           "Cannot find leelaz execution file or net weights file.\n"
-          "Please check your configurations"}},
+          "Please check your configurations."}},
 
         // Common
         {"default_path", {"默認路徑： ", "Default Path: "}},
         {"default_file", {"默認文件： ", "Default File: "}},
         {"save_to", {"另存为： ", "Save To: "}},
         {"not_defined", {"未定义", "Not Defined"}},
+        {"msg_about", {"关于LeelaGTP", "About LeelaGTP"}},
+        {"msg_about_details",
+         {"LeelaGTP是一个里拉训练程序",
+          "LeelaGTP used for leela-zero training"}},
     }
 };
 

@@ -25,57 +25,40 @@
 #include <direct.h>
 #endif
 #include <QPainter>
+#include <QScrollArea>
 #include <QTextStream>
 #include <QtCore/QTimer>
+#include <QDialogButtonBox>
 
 LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
         QMainWindow(parent),
+#ifdef WIN32
         app(app),
-        config_dialog(this, &config),
-        butt_keepSgf(this),
-        butt_sgfpath(this),
-        show_sgfpath(this),
-        butt_netfile(this),
-        show_netfile(this),
-        label_timeout(this),
-        butt_timeout(this),
-        label_maxgames(this),
-        butt_maxgames(this),
-        label_gpugames(this),
-        butt_gpugames(this),
-        butt_configs(this),
-        butt_run(this),
-        show_board(this),
-        show_stones(this),
-        butt_translation(this),
+#endif
+        config_dialog(nullptr, &config),
         is_running(false),
-        win_size(600), win_gap(30), win_xlb(3), win_ylb(3) {
+        boss(nullptr) {
     this->config_dialog.setModal(true);
 
-
     this->setWindowTitle(Trans("leelagtp_title"));
-    this->setFixedSize(900, 720);
-
-    show_board.installEventFilter(this);
-    show_board.setGeometry(QRect(win_xlb + win_gap / 2, win_ylb + win_gap / 2,
-                                 win_gap * 19.5, win_gap * 19.5));
-    show_board.update();
-
-    show_stones.installEventFilter(this);
-    show_stones.setGeometry(QRect(win_xlb + win_gap / 2, win_ylb + win_gap / 2,
-                                 win_gap * 19.5, win_gap * 19.5));
-    show_stones.update();
+    this->setWindowIcon(QIcon(":/images/Lancifolium.ico"));
+    this->resize(900, 700);
 
 
+    /***
+     * Functionalities and Actions.
+     */
     this->butt_run.setText(Trans("run"));
     this->butt_run.setToolTip(Trans("tip_run"));
-    this->butt_run.setGeometry(660, 240, 84, 24);
     connect(&butt_run, SIGNAL(clicked(bool)), this, SLOT(on_runbutt()));
+    connect(&config_dialog.butt_okays, &QDialogButtonBox::accepted, this, &LeelaGTP::on_runbutt);
+
+    this->butt_createtask.setText(Trans("new_task"));
+    this->butt_createtask.setToolTip(Trans("tip_new_task"));
+    connect(&butt_createtask, SIGNAL(clicked(bool)), this, SLOT(on_createtask()));
 
     this->label_timeout.setText(Trans("timeout"));
     this->label_timeout.setToolTip(Trans("tip_timeout"));
-    this->label_timeout.setGeometry(660, 306, 120, 24);
-    this->butt_timeout.setGeometry(660, 330, 84, 24);
     this->butt_timeout.setRange(0, 1000000);
     this->butt_timeout.setValue(config.run_timeout);
     this->butt_timeout.setSingleStep(10);
@@ -85,8 +68,6 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
 
     this->label_maxgames.setText(Trans("max_games"));
     this->label_maxgames.setToolTip(Trans("tip_max_games"));
-    this->label_maxgames.setGeometry(660, 366, 120, 24);
-    this->butt_maxgames.setGeometry(660, 390, 84, 24);
     this->butt_maxgames.setRange(0, 1000000);
     this->butt_maxgames.setValue(config.run_maxgames);
     this->butt_maxgames.setSingleStep(10);
@@ -96,64 +77,174 @@ LeelaGTP::LeelaGTP(QApplication *app, QWidget *parent) :
 
     this->label_gpugames.setText(Trans("max_gpugames"));
     this->label_gpugames.setToolTip(Trans("tip_max_gpugames"));
-    this->label_gpugames.setGeometry(660, 426, 150, 24);
-    this->butt_gpugames.setGeometry(660, 450, 84, 24);
     this->butt_gpugames.setRange(1, 8);
     this->butt_gpugames.setValue(config.gpu_games);
     this->butt_gpugames.setSingleStep(1);
-    //connect(butt_gamesNum, static_cast<void(QSpinBox::*)(int)>(&QSpinBox::valueChanged),
-    //        [=] (int val) { int_gamesNum = val; });
     connect(&butt_gpugames, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.gpu_games = val; });
 
-    this->butt_configs.setText(Trans("more_configs"));
-    this->butt_configs.setToolTip(Trans("tip_more_configs"));
-    this->butt_configs.setGeometry(660, 516, 84, 24);
-    connect(&butt_configs, SIGNAL(clicked(bool)), this, SLOT(on_furconfigs()));
-
 
     this->butt_keepSgf.setText(Trans("keep_sgf"));
-    this->butt_keepSgf.setGeometry(60, 606, 600, 24);
     this->butt_keepSgf.setChecked(config.keepSgf);
     connect(&butt_keepSgf, SIGNAL(toggled(bool)), this, SLOT(on_keepSgf()));
     this->butt_sgfpath.setText(Trans("open_filepath"));
     this->butt_sgfpath.setToolTip(Trans("tip_open_filepath"));
     this->butt_sgfpath.setFocus();
-    this->butt_sgfpath.setGeometry(60, 630, 120, 24);
     connect(&butt_sgfpath, SIGNAL(clicked(bool)), this, SLOT(on_sgfpathbutt()));
     this->butt_sgfpath.setEnabled(config.keepSgf);
     this->show_sgfpath.setText(Trans("default_path") + config.sgf_path);
     this->show_sgfpath.setToolTip(Trans("default_path") + config.sgf_path);
-    this->show_sgfpath.setGeometry(196, 630, 600, 24);
     this->show_sgfpath.setEnabled(config.keepSgf);
 
     this->butt_netfile.setText(Trans("net_file"));
     this->butt_netfile.setToolTip(Trans("tip_net_file"));
-    this->butt_netfile.setGeometry(60, 660, 120, 24);
     connect(&butt_netfile, SIGNAL(clicked(bool)), this, SLOT(on_netfilebutt()));
-    this->show_netfile.setGeometry(196, 660, 600, 24);
     this->show_netfile.setText(Trans("default_file") + config.net_filepath);
     this->show_netfile.setToolTip(Trans("default_file") + config.net_filepath);
 
-    this->butt_translation.setGeometry(660, 33, 48, 24);
-    this->butt_translation.addItem(QIcon(":/images/chn.png"), "", LeelaGTPLocale::Cn);
-    this->butt_translation.addItem(QIcon(":/images/eng.png"), "", LeelaGTPLocale::En);
+    this->butt_translation.addItem(QIcon(":/images/chn.png"), "中文",
+                                   LeelaGTPLocale::Cn);
+    this->butt_translation.addItem(QIcon(":/images/eng.png"), "English",
+                                   LeelaGTPLocale::En);
     this->butt_translation.setToolTip(Trans("tip_translation"));
-    connect(&butt_translation, SIGNAL(activated(int)), this, SLOT(on_translation()));
+    connect(&this->butt_translation, SIGNAL(activated(int)), this,
+            SLOT(on_translation()));
+
+
+    /***
+     * Menu & Tool bar settings.
+     */
+
+    /*
+     * Actions.
+     */
+    this->act_newfile.setText(Trans("new_file"));
+    this->act_newfile.setIcon(QApplication::style()->standardIcon(QStyle::SP_FileIcon));
+    this->act_newfile.setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
+
+    this->act_openfile.setText(Trans("open_file"));
+    this->act_openfile.setIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogStart));
+    this->act_openfile.setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+
+    this->act_savefile.setText(Trans("save_file"));
+    this->act_savefile.setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
+    this->act_savefile.setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+
+    this->act_exit.setText(Trans("exit"));
+    this->act_exit.setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
+    connect(&this->act_exit, &QAction::triggered, this, &LeelaGTP::on_exit);
+
+    this->act_newtask.setText(Trans("new_task"));
+    this->act_newtask.setIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogDetailedView));
+    this->act_newtask.setShortcut(QKeySequence(Qt::Key_F5));
+    connect(&this->act_newtask, &QAction::triggered, this, &LeelaGTP::on_createtask);
+
+    this->act_opentask.setText(Trans("open_task"));
+    this->act_opentask.setShortcut(QKeySequence(Qt::ALT + Qt::Key_F5));
+    this->act_opentask.setIcon(QApplication::style()->standardIcon(QStyle::SP_FileDialogEnd));
+    this->act_opentask.setEnabled(false);
+
+    this->act_savetask.setText(Trans("save_task"));
+    this->act_savetask.setShortcut(QKeySequence(Qt::ALT + Qt::Key_S));
+    this->act_savetask.setIcon(QApplication::style()->standardIcon(QStyle::SP_DialogSaveButton));
+    this->act_savetask.setEnabled(false);
+
+    this->act_about.setText(Trans("about"));
+    this->act_about.setShortcut(QKeySequence(Qt::Key_F1));
+    this->act_about.setIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion));
+    connect(&this->act_about, &QAction::triggered, this, &LeelaGTP::on_about);
+
+
+    /*
+     * Menu bar settings:
+     *   |File| => |New File|, |Open File|, |Save File|, |Exit|
+     *   |Task| => |New Task|, |Open Task|, |Save Task|
+     *   |Help| => |About|
+     */
+    QMenuBar *menubar = menuBar();
+    /*
+    this->menu_file = menubar->addMenu(Trans("file"));
+    this->menu_file->addAction(&this->act_newfile);
+    this->menu_file->addAction(&this->act_openfile);
+    this->menu_file->addAction(&this->act_savefile);
+    this->menu_file->addSeparator();
+    this->menu_file->addAction(&this->act_exit);
+    */
+
+    this->menu_task = menubar->addMenu(Trans("task"));
+    this->menu_task->addAction(&this->act_newtask);
+    this->menu_task->addAction(&this->act_opentask);
+    this->menu_task->addAction(&this->act_savetask);
+    this->menu_task->addSeparator();
+    this->menu_task->addAction(&this->act_exit);
+
+    this->menu_help = menubar->addMenu(Trans("help"));
+    this->menu_help->addAction(&this->act_about);
+
+
+    /*
+     * Tool bar settings:
+     */
+    this->toolbar = this->addToolBar(Trans("task"));
+    //this->toolbar->addAction(&this->act_newfile);
+    //this->toolbar->addAction(&this->act_openfile);
+    //this->toolbar->addAction(&this->act_savefile);
+    //this->toolbar->addSeparator();
+    this->toolbar->addAction(&this->act_newtask);
+    this->toolbar->addAction(&this->act_opentask);
+    this->toolbar->addAction(&this->act_savetask);
+    this->toolbar->addSeparator();
+    this->toolbar->addAction(&this->act_about);
+    this->toolbar->addWidget(&this->butt_translation);
+
+    /*
+     * Status bar settings:
+     */
+
+
+    /***
+     * Main window.
+     */
+    this->main_splitter = new QSplitter(this);
+    this->main_splitter->setOrientation(Qt::Horizontal);
+    this->main_splitter->setMinimumSize(30, 300);
+    this->main_splitter->addWidget(&this->show_board);
+    this->show_board.refresh();
+
+    QWidget *w = new QWidget(this->main_splitter);
+    QVBoxLayout *vl = new QVBoxLayout(w);
+    vl->addWidget(&this->view_panel);
+    vl->addWidget(&this->butt_run);
+    vl->addWidget(&this->label_timeout);
+    vl->addWidget(&this->butt_timeout);
+    vl->addWidget(&this->label_maxgames);
+    vl->addWidget(&this->butt_maxgames);
+    vl->addWidget(&this->label_gpugames);
+    vl->addWidget(&this->butt_gpugames);
+    vl->addWidget(&this->butt_createtask);
+    vl->addWidget(&this->butt_keepSgf);
+    vl->addWidget(&this->butt_sgfpath);
+    vl->addWidget(&this->show_sgfpath);
+    vl->addWidget(&this->butt_netfile);
+    vl->addWidget(&this->show_netfile);
+
+    w->setLayout(vl);
+    this->setCentralWidget(this->main_splitter);
 }
 
 LeelaGTP::~LeelaGTP() {
-    delete boss;
+}
+
+void LeelaGTP::resizeEvent(QResizeEvent *event) {
 }
 
 bool LeelaGTP::eventFilter(QObject *watched, QEvent *event) {
-    if (event->type() == QEvent::Paint) {
-        if (watched == &show_board)
-            drawing_board();
-        else if (watched == &show_stones)
-            drawing_stones();
-    }
-    return QWidget::eventFilter(watched, event);
+    //if (event->type() == QEvent::Paint) {
+        if (watched == &show_board) {
+            show_board.eventFilter(&show_board, event);
+        }
+    //}
+    return QMainWindow::eventFilter(watched, event);
 }
 
 void LeelaGTP::on_keepSgf() {
@@ -186,7 +277,7 @@ void LeelaGTP::on_netfilebutt() {
     }
 }
 
-void LeelaGTP::on_furconfigs() {
+void LeelaGTP::on_createtask() {
     config_dialog.copyfrom(&config);
     config_dialog.drawwindow();
     config_dialog.show();
@@ -202,7 +293,6 @@ void LeelaGTP::on_runbutt() {
     } else {
         // Now exit
         if (boss) {
-            //QTextStream(stdout) << "sendquit in on runbutt\n";
             boss->sendQuit();
         } else {
             _enable_all_elements(true);
@@ -215,7 +305,7 @@ void LeelaGTP::on_translation() {
     if (this->butt_translation.currentIndex() == __leela_gtp_locale) {
         return;
     } else {
-        __leela_gtp_locale = this->butt_translation.currentIndex() == 0 ?
+        __leela_gtp_locale = (this->butt_translation.currentIndex() == 0) ?
                     LeelaGTPLocale::Cn : LeelaGTPLocale::En;
         this->retranslate();
     }
@@ -273,8 +363,7 @@ void LeelaGTP::on_bossexit() {
     delete boss;
 
     boss = nullptr;
-    draw_mov.init();
-    show_stones.update();
+    this->show_board.refresh();
 }
 
 void LeelaGTP::on_recvmove(int move) {
@@ -282,36 +371,35 @@ void LeelaGTP::on_recvmove(int move) {
     if (move == 0)
         return;
     /*
-     * 210000: black pass
-     * 220000: white pass
-     * 310000: black resign
-     * 320000: white resign
-     *  10000: black move
-     *  20000: white move
+     * 0x01XXXX: black move
+     * 0x02XXXX: white move
+     * 0x210000: black pass
+     * 0x220000: white pass
+     * 0x310000: black resign
+     * 0x320000: white resign
      */
-    int cmd = move / 100000;
+    int cmd = (move & 0xF00000) >> 20;
     switch (cmd) {
     case 0: // move
-        tmpmove = (move % 10000) / 100 * 100 + 18 - (move % 100);
-        draw_mov.configDropStone(move / 10000, tmpmove);
+        tmpmove = (move & 0xFF00) + 18 - (move & 0xFF);
+        this->show_board.drop_stone((move & 0xFF0000) >> 16, tmpmove);
         break;
     case 2: // pass
         return;
     case 1: // init
     case 3: // resign
-        draw_mov.init();
+        this->show_board.refresh();
         QTextStream(stdout) << "SgfMov start a new game\n";
         break;
     default:
         return;
     }
-    show_stones.update();
 }
 
 void LeelaGTP::_enable_all_elements(bool cmd) {
     butt_timeout.setEnabled(cmd);
     butt_gpugames.setEnabled(cmd);
-    butt_configs.setEnabled(cmd);
+    butt_createtask.setEnabled(cmd);
     butt_maxgames.setEnabled(cmd);
     butt_keepSgf.setEnabled(cmd);
     butt_netfile.setEnabled(cmd);
@@ -321,67 +409,21 @@ void LeelaGTP::_enable_all_elements(bool cmd) {
     }
 }
 
-void LeelaGTP::drawing_board() {
-    QPainter pain(&show_board);
-    QRect target(win_gap / 2, win_gap / 2,
-                 win_gap * 19, win_gap * 19);
-    pain.drawImage(target, QImage(":/images/bord.png"));
-    pain.setRenderHint(QPainter::Antialiasing, true); // 使得邊緣柔和
-
-    int tmpi, tmpj;
-    pain.setPen(Qt::black);
-    //pain.setBrush(Qt::blue);
-    for (tmpi = 0; tmpi < 19; tmpi++) { // 畫棋盤
-        pain.drawLine(win_gap, win_gap + tmpi * win_gap,
-                      win_gap + 18 * win_gap, win_gap + tmpi * win_gap);
-        pain.drawLine(win_gap + tmpi * win_gap, win_gap,
-                      win_gap + tmpi * win_gap, win_gap + 18 * win_gap);
-    }
-    int dotsize = win_gap / 15;
-    for (tmpi = win_gap + 3 * win_gap - dotsize; tmpi < win_size;
-         tmpi += 6 * win_gap) { // 畫星位
-        for (tmpj = win_gap + 3 * win_gap - dotsize; tmpj < win_size;
-             tmpj += 6 * win_gap) {
-            pain.drawRect(tmpi, tmpj, dotsize * 2, dotsize * 2);
-        }
-    }
-}
-
-void LeelaGTP::drawing_stones() {
-    QPainter pain(&show_stones);
-    pain.setRenderHint(QPainter::Antialiasing, true); // 使得邊緣柔和
-
-    int tmpi, tmpj;
-    pain.setPen(Qt::black);
-    for (tmpi = 0; tmpi < 19; tmpi++) {
-        for (tmpj = 0; tmpj < 19; tmpj++) {
-            if (draw_mov.ston[tmpi][tmpj] == 1) {
-                QRect target(tmpi * win_gap + win_gap * 11 / 20,
-                             tmpj * win_gap + win_gap * 11 / 20,
-                             win_gap * 9 / 10,
-                             win_gap * 9 / 10);
-                pain.drawImage(target, QImage(":/images/movblack.png"));
-            }
-            else if (draw_mov.ston[tmpi][tmpj] == 2) {
-                QRect target(tmpi * win_gap + win_gap * 11 / 20,
-                             tmpj * win_gap + win_gap * 11 / 20,
-                             win_gap * 9 / 10,
-                             win_gap * 9 / 10);
-                pain.drawImage(target, QImage(":/images/movwhite.png"));
-            }
-        }
-    } // finished for
-
-    if (draw_mov.currmove >= 0) {
-        QRect target(draw_mov.currmove / 100 * win_gap + win_gap,
-                     draw_mov.currmove % 100 * win_gap + win_gap,
-                     win_gap / 3, win_gap / 3);
-        pain.drawImage(target, QImage(":/images/cur_mov.png"));
-    }
-}
-
 void LeelaGTP::retranslate() {
     this->setWindowTitle(Trans("leelagtp_title"));
+
+    this->act_newfile.setText(Trans("new_file"));
+    this->act_openfile.setText(Trans("open_file"));
+    this->act_savefile.setText(Trans("save_file"));
+    this->act_exit.setText(Trans("exit"));
+    this->act_newtask.setText(Trans("new_task"));
+    this->act_opentask.setText(Trans("open_task"));
+    this->act_savetask.setText(Trans("save_task"));
+    this->act_about.setText(Trans("about"));
+
+    //this->menu_file->setTitle(Trans("file"));
+    this->menu_task->setTitle(Trans("task"));
+    this->menu_help->setTitle(Trans("help"));
 
     if (is_running)
         this->butt_run.setText(Trans("stop"));
@@ -400,8 +442,8 @@ void LeelaGTP::retranslate() {
     this->label_gpugames.setText(Trans("max_gpugames"));
     this->label_gpugames.setToolTip(Trans("tip_max_gpugames"));
 
-    this->butt_configs.setText(Trans("more_configs"));
-    this->butt_configs.setToolTip(Trans("tip_more_configs"));
+    this->butt_createtask.setText(Trans("new_task"));
+    this->butt_createtask.setToolTip(Trans("tip_new_task"));
 
     this->butt_keepSgf.setText(Trans("keep_sgf"));
     this->butt_sgfpath.setText(Trans("open_filepath"));
@@ -422,4 +464,13 @@ void LeelaGTP::retranslate() {
     }
 
     config_dialog.retranslate();
+}
+
+void LeelaGTP::on_exit() {
+    this->close();
+}
+
+void LeelaGTP::on_about() {
+    QMessageBox::about(this, Trans("msg_about"),
+                             Trans("msg_about_details"));
 }

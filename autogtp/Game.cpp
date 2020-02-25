@@ -358,33 +358,33 @@ bool Game::readMove() {
                           Qt::CaseInsensitive) == 0) {
         m_passes++;
 #if defined(LEELA_GTP)
-        ret = 200000; // means pass
+        ret = 0x200000; // means pass
         if (m_blackToMove)
-            ret += 10000;
+            ret += 0x10000;
         else
-            ret += 20000;
+            ret += 0x20000;
 #endif
     } else if (m_moveDone.compare(QStringLiteral("resign"),
                                  Qt::CaseInsensitive) == 0) {
         m_resignation = true;
         m_blackResigned = m_blackToMove;
 #if defined(LEELA_GTP)
-        ret = 300000;
+        ret = 0x300000;
         if (m_blackResigned)
-            ret += 10000;
+            ret += 0x10000;
         else
-            ret += 20000;
+            ret += 0x20000;
 #endif
     } else {
         m_passes = 0;
 #if defined(LEELA_GTP)
         if (m_blackToMove)
-            ret = 10000;
+            ret = 0x10000;
         else
-            ret = 20000;
-        ret += (m_moveDone.toLatin1().data()[0] - 'A') * 100;
+            ret = 0x20000;
+        ret += (m_moveDone.toLatin1().data()[0] - 'A') << 8;
         if (m_moveDone.toLatin1().data()[0] > 'I')
-            ret -= 100;
+            ret -= 0x100;
         if (m_moveDone.length() == 3)
             ret += (m_moveDone.toLatin1().data()[1] - '0') * 10
                     + m_moveDone.toLatin1().data()[2] - '1';

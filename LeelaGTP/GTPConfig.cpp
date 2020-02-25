@@ -106,46 +106,17 @@ void GTPConfigElements::copyto(GTPConfigElements *c) {
 
 GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
         QDialog (parent),
-        label_threads(this),
-        butt_threads(this),
-        label_playouts(this),
-        butt_playouts(this),
-        label_batchsize(this),
-        butt_batchsize(this),
-        label_random(this),
-        butt_random(this),
-        butt_enablenoise(this),
-        label_loopvisits(this),
-        butt_loopvisits(this),
-        label_resignpct(this),
-        show_resignpct(this),
-        butt_resignpct(this),
-        label_exlzparam(this),
-        edit_exlzparam(this),
-        label_jobtype(this),
-        butt_jobtype(this),
-        butt_compnetfile(this),
-        show_compnetfile(this),
-        butt_dumpsgffile(this),
-        show_dumpsgffile(this),
-        butt_dumpdatafile(this),
-        show_dumpdatafile(this),
-        butt_trainingdatapath(this),
-        show_trainingdatapath(this),
-        butt_dumbpass(this),
-        butt_loaddata(this),
-        butt_okay(this),
-        butt_cancel(this),
         main_config(m_config) {
     assert(main_config != nullptr);
 
     this->setWindowTitle(Trans("gtpconfig_title"));
-    this->setFixedSize(600, 600);
+    this->setWindowIcon(QIcon(":/images/Lancifolium.ico"));
 
+    /***
+     * Elements setting.
+     */
     this->label_threads.setText(Trans("threads"));
     this->label_threads.setToolTip(Trans("tip_threads"));
-    this->label_threads.setGeometry(60, 6, 150, 24);
-    this->butt_threads.setGeometry(60, 30, 84, 24);
     this->butt_threads.setRange(0, 800);
     this->butt_threads.setValue(config.threads_num);
     this->butt_threads.setSingleStep(10);
@@ -154,8 +125,6 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
 
     this->label_playouts.setText(Trans("playouts"));
     this->label_playouts.setToolTip(Trans("tip_playouts"));
-    this->label_playouts.setGeometry(240, 6, 150, 24);
-    this->butt_playouts.setGeometry(240, 30, 84, 24);
     this->butt_playouts.setRange(0, 800);
     this->butt_playouts.setValue(config.playouts);
     this->butt_playouts.setSingleStep(10);
@@ -164,8 +133,6 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
 
     this->label_batchsize.setText(Trans("batchsize"));
     this->label_batchsize.setToolTip(Trans("tip_batchsize"));
-    this->label_batchsize.setGeometry(420, 6, 150, 24);
-    this->butt_batchsize.setGeometry(420, 30, 84, 24);
     this->butt_batchsize.setRange(0, 800);
     this->butt_batchsize.setValue(config.batch_size);
     this->butt_batchsize.setSingleStep(10);
@@ -174,8 +141,6 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
 
     this->label_random.setText(Trans("random"));
     this->label_random.setToolTip(Trans("tip_random"));
-    this->label_random.setGeometry(60, 66, 150, 24);
-    this->butt_random.setGeometry(60, 90, 84, 24);
     this->butt_random.setRange(0, 800);
     this->butt_random.setValue(config.randomcnt);
     this->butt_random.setSingleStep(10);
@@ -184,8 +149,6 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
 
     this->label_loopvisits.setText(Trans("loop_visits"));
     this->label_loopvisits.setToolTip(Trans("tip_loop_visits"));
-    this->label_loopvisits.setGeometry(240, 66, 150, 24);
-    this->butt_loopvisits.setGeometry(240, 90, 84, 24);
     this->butt_loopvisits.setRange(100, 100000);
     this->butt_loopvisits.setValue(config.loop_visits);
     this->butt_loopvisits.setSingleStep(100);
@@ -194,98 +157,127 @@ GTPConfig::GTPConfig(QWidget *parent, GTPConfigElements *m_config) :
 
     this->label_resignpct.setText(Trans("resign"));
     this->label_resignpct.setToolTip(Trans("tip_resign"));
-    this->label_resignpct.setGeometry(420, 66, 150, 24);
     this->show_resignpct.setText("%");
-    this->show_resignpct.setGeometry(460, 90, 24, 24);
-    this->butt_resignpct.setGeometry(420, 90, 36, 24);
     this->butt_resignpct.setRange(1, 30);
     this->butt_resignpct.setSingleStep(1);
     connect(&butt_resignpct, QOverload<int>::of(&QSpinBox::valueChanged),
             [=](int val) { config.resignation_percent = val; });
 
-
     this->butt_enablenoise.setText(Trans("noise"));
-    this->butt_enablenoise.setGeometry(60, 120, 150, 24);
     connect(&butt_enablenoise, SIGNAL(toggled(bool)), this, SLOT(on_noise()));
 
     this->butt_dumbpass.setText(Trans("dumbpass"));
-    this->butt_dumbpass.setGeometry(60, 150, 150, 24);
     connect(&butt_dumbpass, SIGNAL(toggled(bool)), this, SLOT(on_dumbpass()));
 
     this->butt_loaddata.setText(Trans("load_data"));
-    this->butt_loaddata.setGeometry(60, 180, 360, 24);
     connect(&butt_loaddata, SIGNAL(toggled(bool)), this, SLOT(on_loadtrainingdata()));
 
     this->butt_trainingdatapath.setText(Trans("open_train_data_path"));
     this->butt_trainingdatapath.setToolTip(Trans("tip_open_train_data_path"));
-    this->butt_trainingdatapath.setGeometry(60, 210, 108, 24);
     connect(&butt_trainingdatapath, SIGNAL(clicked(bool)), this, SLOT(on_trainingdatapath()));
     this->show_trainingdatapath.setText(Trans("default_path") + config.training_data_path);
-    this->show_trainingdatapath.setGeometry(176, 210, 360, 24);
 
 
     this->label_exlzparam.setText(Trans("extral_params"));
     this->label_exlzparam.setToolTip(Trans("tip_extral_params"));
-    this->label_exlzparam.setGeometry(60, 246, 150, 24);
     this->edit_exlzparam.setText(config.extral_lzparam);
-    this->edit_exlzparam.setGeometry(60, 270, 400, 24);
     connect(&edit_exlzparam, SIGNAL(editingFinished()), this, SLOT(on_exlzparam()));
 
     /*
-     * Following is Job Type settings.
+     * Job Type settings.
      */
-
-    this->label_jobtype.setText(Trans("job_type"));
-    this->label_jobtype.setToolTip(Trans("tip_job_type"));
-    this->label_jobtype.setGeometry(60, 306, 150, 24);
-    this->butt_jobtype.setToolTip(Trans("tip_job_type"));
-    this->butt_jobtype.setGeometry(60, 330, 120, 24);
-    this->butt_jobtype.addItem(Trans("type_local_production"),
-                               GTPConfigElements::JobType::LocalProduction);
-    this->butt_jobtype.addItem(Trans("type_local_validation"),
-                               GTPConfigElements::JobType::LocalValidation);
-    this->butt_jobtype.addItem(Trans("type_online"),
-                               GTPConfigElements::JobType::OnlineJob);
-    this->butt_jobtype.addItem(Trans("type_dump_supervised"),
-                               GTPConfigElements::JobType::DumpSupervised);
-    connect(&butt_jobtype, SIGNAL(activated(int)), this, SLOT(on_jobtype()));
-
+    this->view_jobtype.setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    this->view_jobtype.setSelectionMode(QAbstractItemView::SingleSelection);
+    this->view_jobtype.setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->model_jobtype.appendRow(new QStandardItem(Trans("type_local_production")));
+    this->model_jobtype.appendRow(new QStandardItem(Trans("type_local_validation")));
+    this->model_jobtype.appendRow(new QStandardItem(Trans("type_online")));
+    this->model_jobtype.appendRow(new QStandardItem(Trans("type_dump_supervised")));
+    this->view_jobtype.setModel(&this->model_jobtype);
+    this->model_jobtype.item(0)->setToolTip(Trans("tip_job_type"));
+    this->model_jobtype.item(1)->setToolTip(Trans("tip_job_type"));
+    this->model_jobtype.item(2)->setToolTip(Trans("tip_job_type"));
+    this->model_jobtype.item(3)->setToolTip(Trans("tip_job_type"));
+    this->view_jobtype.setCurrentIndex(
+                this->model_jobtype.indexFromItem(
+                    this->model_jobtype.item(config.job_type)));
+    connect(&this->view_jobtype, SIGNAL(clicked(QModelIndex)),
+            this, SLOT(on_jobtype_clicked(QModelIndex)));
 
     this->butt_compnetfile.setText(Trans("open_net_weights_file"));
     this->butt_compnetfile.setToolTip(Trans("tip_open_net_weights_file"));
-    this->butt_compnetfile.setGeometry(60, 360, 108, 24);
     connect(&butt_compnetfile, SIGNAL(clicked(bool)), this, SLOT(on_compnetfile()));
     this->show_compnetfile.setText(
                 Trans("default_file") + config.net_component_filepath);
     this->show_compnetfile.setToolTip(
             Trans("default_file") + config.net_component_filepath);
-    this->show_compnetfile.setGeometry(176, 360, 400, 24);
 
     this->butt_dumpsgffile.setText(Trans("open_train_sgf_file"));
     this->butt_dumpsgffile.setToolTip(Trans("tip_open_train_sgf_file"));
-    this->butt_dumpsgffile.setGeometry(60, 390, 108, 24);
     connect(&butt_dumpsgffile, SIGNAL(clicked(bool)), this, SLOT(on_dumpsgffile()));
     this->show_dumpsgffile.setText(Trans("default_file") + config.dump_sgf_file);
     this->show_dumpsgffile.setToolTip(
             Trans("default_file") + config.dump_sgf_file);
-    this->show_dumpsgffile.setGeometry(176, 390, 400, 24);
 
     this->butt_dumpdatafile.setText(Trans("save_net_weights_file"));
     this->butt_dumpdatafile.setToolTip(Trans("tip_save_net_weights_file"));
-    this->butt_dumpdatafile.setGeometry(60, 420, 108, 24);
     connect(&butt_dumpdatafile, SIGNAL(clicked(bool)), this, SLOT(on_savedumpdatafile()));
     this->show_dumpdatafile.setText(Trans("default_file") + config.dump_data_file);
     this->show_dumpdatafile.setToolTip(
             Trans("default_file") + config.dump_data_file);
-    this->show_dumpdatafile.setGeometry(176, 420, 400, 24);
 
+    this->butt_okays.setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+    this->butt_okays.button(QDialogButtonBox::Ok)->setText(Trans("okay"));
+    this->butt_okays.button(QDialogButtonBox::Cancel)->setText(Trans("cancel"));
+    connect(&butt_okays, &QDialogButtonBox::accepted, this, &GTPConfig::on_okay);
+    connect(&butt_okays, &QDialogButtonBox::rejected, this, &GTPConfig::on_cancel);
 
-    this->butt_okay.setText(Trans("okay"));
-    this->butt_okay.setGeometry(60, 510, 84, 24);
-    connect(&butt_okay, SIGNAL(clicked(bool)), this, SLOT(on_okay()));
-    this->butt_cancel.setText(Trans("cancel"));
-    this->butt_cancel.setGeometry(150, 510, 84, 24);
-    connect(&butt_cancel, SIGNAL(clicked(bool)), this, SLOT(on_cancel()));
+    /***
+     * Layout settings.
+     */
+    this->w = new QWidget(this);
+    this->gl_window = new QGridLayout(this->w);
+
+    this->gl_window->addWidget(&this->view_jobtype, 0, 0, 2, 1);
+
+    this->gl_commons = new QGridLayout();
+    this->set_common_elements(this->gl_commons);
+    this->gl_window->addLayout(this->gl_commons, 0, 1, 1, 1);
+
+    this->sl_jobtypes = new QStackedLayout();
+
+    this->w_local = new QWidget(this->w);
+    this->gl_local = new QGridLayout(this->w_local);
+    this->sl_jobtypes->insertWidget(GTPConfigElements::JobType::LocalProduction,
+                                    this->w_local);
+
+    this->w_localmatch = new QWidget(this->w);
+    this->gl_localmatch = new QGridLayout(this->w_localmatch);
+    this->gl_localmatch->addWidget(&this->butt_compnetfile, 12, 0);
+    this->gl_localmatch->addWidget(&this->show_compnetfile, 12, 1, 1, 2);
+    this->sl_jobtypes->insertWidget(GTPConfigElements::JobType::LocalValidation,
+                                    this->w_localmatch);
+
+    this->w_online = new QWidget(this->w);
+    this->gl_online = new QGridLayout(this->w_online);
+    this->sl_jobtypes->insertWidget(GTPConfigElements::JobType::OnlineJob,
+                                    this->w_online);
+
+    this->w_convert = new QWidget(this->w);
+    this->gl_convert = new QGridLayout(this->w_convert);
+    this->gl_convert->addWidget(&this->butt_dumpsgffile, 13, 0);
+    this->gl_convert->addWidget(&this->show_dumpsgffile, 13, 1, 1, 2);
+    this->gl_convert->addWidget(&this->butt_dumpdatafile, 14, 0);
+    this->gl_convert->addWidget(&this->show_dumpdatafile, 14, 1, 1, 2);
+    this->sl_jobtypes->insertWidget(GTPConfigElements::JobType::DumpSupervised,
+                                    this->w_convert);
+
+    this->sl_jobtypes->setCurrentIndex(3);
+    this->gl_window->addLayout(this->sl_jobtypes, 1, 1, 1, 1);
+
+    this->gl_window->addWidget(&this->butt_okays, 2, 1);
+    this->w->setLayout(this->gl_window);
+    this->resize(this->gl_window->sizeHint());
 }
 
 GTPConfig::~GTPConfig() {
@@ -309,9 +301,7 @@ void GTPConfig::drawwindow() {
     }
 
     this->edit_exlzparam.setText(config.extral_lzparam);
-    this->butt_jobtype.setCurrentIndex(config.job_type);
-
-    on_jobtype();
+    this->sl_jobtypes->setCurrentIndex(config.job_type);
 
     if (config.net_component_filepath == "./networks/component_weights.txt") {
         this->show_compnetfile.setText(
@@ -379,17 +369,15 @@ void GTPConfig::retranslate() {
     this->label_exlzparam.setText(Trans("extral_params"));
     this->label_exlzparam.setToolTip(Trans("tip_extral_params"));
 
-    this->label_jobtype.setText(Trans("job_type"));
-    this->label_jobtype.setToolTip(Trans("tip_job_type"));
-    this->butt_jobtype.setToolTip(Trans("tip_job_type"));
-    this->butt_jobtype.setItemText(GTPConfigElements::JobType::LocalProduction,
-                                   Trans("type_local_production"));
-    this->butt_jobtype.setItemText(GTPConfigElements::JobType::LocalValidation,
-                                   Trans("type_local_validation"));
-    this->butt_jobtype.setItemText(GTPConfigElements::JobType::OnlineJob,
-                                   Trans("type_online"));
-    this->butt_jobtype.setItemText(GTPConfigElements::JobType::DumpSupervised,
-                                   Trans("type_dump_supervised"));
+    this->view_jobtype.setToolTip(Trans("tip_job_type"));
+    this->model_jobtype.item(GTPConfigElements::JobType::LocalProduction)
+            ->setText(Trans("type_local_production"));
+    this->model_jobtype.item(GTPConfigElements::JobType::LocalValidation)
+            ->setText(Trans("type_local_validation"));
+    this->model_jobtype.item(GTPConfigElements::JobType::OnlineJob)
+            ->setText(Trans("type_online"));
+    this->model_jobtype.item(GTPConfigElements::JobType::DumpSupervised)
+            ->setText(Trans("type_dump_supervised"));
 
     this->butt_compnetfile.setText(Trans("open_net_weights_file"));
     this->butt_compnetfile.setToolTip(Trans("tip_open_net_weights_file"));
@@ -418,8 +406,34 @@ void GTPConfig::retranslate() {
                 Trans("default_file") + config.dump_data_file);
     }
 
-    this->butt_okay.setText(Trans("okay"));
-    this->butt_cancel.setText(Trans("cancel"));
+    this->butt_okays.button(QDialogButtonBox::Ok)->setText(Trans("okay"));
+    this->butt_okays.button(QDialogButtonBox::Cancel)->setText(Trans("cancel"));
+}
+
+void GTPConfig::set_common_elements(QGridLayout *l) {
+    l->addWidget(&this->label_threads, 1, 0);
+    l->addWidget(&this->butt_threads, 1, 1);
+    l->addWidget(&this->label_playouts, 2, 0);
+    l->addWidget(&this->butt_playouts, 2, 1);
+
+    l->addWidget(&this->label_batchsize, 3, 0);
+    l->addWidget(&this->butt_batchsize, 3, 1);
+    l->addWidget(&this->label_random, 4, 0);
+    l->addWidget(&this->butt_random, 4, 1);
+
+    l->addWidget(&this->label_resignpct, 5, 0);
+    l->addWidget(&this->show_resignpct, 5, 2);
+    l->addWidget(&this->butt_resignpct, 5, 1);
+
+    l->addWidget(&this->butt_enablenoise, 6, 0, 1, 3);
+    l->addWidget(&this->butt_dumbpass, 7, 0, 1, 3);
+    l->addWidget(&this->butt_loaddata, 8, 0, 1, 3);
+
+    l->addWidget(&this->butt_trainingdatapath, 9, 0);
+    l->addWidget(&this->show_trainingdatapath, 9, 1, 1, 2);
+
+    l->addWidget(&this->label_exlzparam, 10, 0);
+    l->addWidget(&this->edit_exlzparam, 11, 0, 1, 3);
 }
 
 void GTPConfig::on_noise() {
@@ -430,8 +444,12 @@ void GTPConfig::on_noise() {
     }
 }
 
-void GTPConfig::on_jobtype() {
-    switch (this->butt_jobtype.currentIndex()) {
+void GTPConfig::on_jobtype_clicked(QModelIndex index) {
+    int i = index.row();
+    assert(i >= GTPConfigElements::JobType::LocalProduction &&
+           i <= GTPConfigElements::JobType::DumpSupervised);
+    this->sl_jobtypes->setCurrentIndex(i);
+    switch (i) {
     case GTPConfigElements::JobType::LocalProduction:
         config.job_type = GTPConfigElements::JobType::LocalProduction;
         break;
@@ -448,25 +466,9 @@ void GTPConfig::on_jobtype() {
         config.job_type = GTPConfigElements::JobType::LocalProduction;
         break;
     }
-
-    if (config.job_type == GTPConfigElements::JobType::LocalValidation) {
-        this->butt_compnetfile.setEnabled(true);
-        this->show_compnetfile.setEnabled(true);
-    } else {
-        this->butt_compnetfile.setEnabled(false);
-        this->show_compnetfile.setEnabled(false);
-    }
-    if (config.job_type == GTPConfigElements::JobType::DumpSupervised) {
-        this->butt_dumpsgffile.setEnabled(true);
-        this->show_dumpsgffile.setEnabled(true);
-        this->butt_dumpdatafile.setEnabled(true);
-        this->show_dumpdatafile.setEnabled(true);
-    } else {
-        this->butt_dumpsgffile.setEnabled(false);
-        this->show_dumpsgffile.setEnabled(false);
-        this->butt_dumpdatafile.setEnabled(false);
-        this->show_dumpdatafile.setEnabled(false);
-    }
+    this->view_jobtype.setCurrentIndex(
+                this->model_jobtype.indexFromItem(
+                    this->model_jobtype.item(config.job_type)));
 }
 
 void GTPConfig::on_compnetfile() {

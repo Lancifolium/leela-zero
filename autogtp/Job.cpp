@@ -88,7 +88,7 @@ Result ProductionJob::execute(){
     }
 #if defined(LEELA_GTP)
     if (m_should_sendmsg) {
-        emit sendmessage(100000); // init
+        emit sendmessage(0x100000); // init
     }
 #endif
     do {
@@ -194,7 +194,7 @@ Result ValidationJob::execute(){
     }
 #if defined(LEELA_GTP)
     if (m_should_sendmsg) {
-        emit sendmessage(100000); // init
+        emit sendmessage(0x100000); // init
     }
 #endif
     do {
